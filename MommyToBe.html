@@ -1,1 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* ===== Rose-Pine Theme & Layout & Accessibility ===== */
+    :root {
+      --bg: #191724;
+      --card: #1f1d2e;
+      --surface: #26233a;
+      --border: #403d52;
+      --text: #e0def4;
+      --muted: #6e6a86;
+      --accent: #eb6f92;
+      --secondary: #31748f;
+      --ok: #9ccfd8;     /* for “good / active” glow */
+      --warn: #eb6f92;   /* for “closed / missing” glow (rose-pink) */
+      --cta: #f6c177;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Verdana, Geneva, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      background: var(--card);
+      border-bottom: 2px solid var(--border);
+    }
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .banner {
+      margin-top: 12px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 16px;
+      gap: 16px;
+    }
+    .column {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .left-column {
+      flex: 1 1 280px;
+      max-width: 340px;
+    }
+    .right-column {
+      flex: 2 1 560px;
+      min-width: 320px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text);
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      background: var(--secondary);
+      border: none;
+      color: var(--text);
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+    button.primary {
+      background: var(--accent);
+      color: #191724;
+      font-weight: 700;
+    }
+    button.alt {
+      background: #2e2940;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .client-list {
+      max-height: 65vh;
+      overflow-y: auto;
+      margin-top: 12px;
+      padding-right: 4px;
+    }
+    .client-item {
+      padding: 14px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .client-item:hover {
+      border-color: var(--accent);
+      background: var(--card);
+    }
+    .client-name {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 17px;
+    }
+    .status {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .section-title {
+      font-size: 20px;
+      margin: 0 0 12px 0;
+      color: var(--cta);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .row .half {
+      flex: 1 1 48%;
+    }
+
+    .helper {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .signature-pad {
+      background: #ffffff;      /* 🔁 changed to white per request */
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      width: 100%;
+      height: 300px;
+      touch-action: none;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .actions-row button {
+      flex: 1 1 48%;
+    }
+
+    .muted-text {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--accent);
+      color: #191724;
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .item-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .item-card h4 {
+      margin: 0 0 6px 0;
+      color: var(--cta);
+      font-size: 16px;
+    }
+    .item-card p {
+      margin: 0 0 6px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .item-card input {
+      margin-top: 8px;
+    }
+
+    /* ===== Contract Status Glow ===== */
+    .contract-active {
+      border: 2px solid var(--ok);
+      box-shadow: 0 0 12px rgba(156, 207, 216, 0.7);
+    }
+    .contract-closed {
+      border: 2px solid var(--warn);
+      box-shadow: 0 0 12px rgba(235, 111, 146, 0.7);
+    }
+
+    /* Modal overlay */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 10000;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (max-width: 900px) {
+      .left-column, .right-column {
+        flex: 1 1 100%;
+        max-width: none;
+      }
+      .row .half {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mommy-To-Be Provisions Program</h1>
+  </header>
+
+  <div class="container">
+    <!-- Left Column: Search + Client List -->
+    <div class="column left-column">
+      <div class="card">
+        <label for="search">Search Clients</label>
+        <input id="search" type="text" placeholder="Search by name or phone" oninput="renderClientList()">
+        <button class="primary" onclick="openNewClientCard()">+ Add New Client</button>
+        <div class="client-list" id="clientList"></div>
+      </div>
+    </div>
+
+    <!-- Right Column: Main Panel -->
+    <div class="column right-column" id="mainPanel">
+      <!-- New Client Intake -->
+      <div class="card" id="newClientCard" style="display:none;">
+        <div class="section-title">New Client Intake</div>
+        <div class="helper">Fill details, enter clerk initials, then open the contract to capture a signature before saving.</div>
+        <div class="row">
+          <div class="half">
+            <label>First Name</label>
+            <input id="newFirstName" type="text">
+          </div>
+          <div class="half">
+            <label>Last Name</label>
+            <input id="newLastName" type="text">
+          </div>
+        </div>
+        <label>Phone</label>
+        <input id="newPhone" type="tel" placeholder="555-555-5555">
+        <label>Guardians</label>
+        <textarea id="newGuardians"></textarea>
+        <div class="row">
+          <div class="half">
+            <label>Due Month (YYYY-MM)</label>
+            <input id="newDueMonth" type="month">
+          </div>
+          <div class="half">
+            <label>Clerk Initials (required)</label>
+            <input id="newClerk" type="text" maxlength="6">
+          </div>
+        </div>
+        <label>Notes</label>
+        <textarea id="newNotes" placeholder="Intake notes"></textarea>
+        <div class="row">
+          <div class="half">
+            <label>Contract Signature (required)</label>
+            <div id="newContractStatus" class="muted-text">No signature captured</div>
+          </div>
+          <div class="half">
+            <button class="primary" onclick="openSignaturePad('new')">Open Contract to Sign</button>
+          </div>
+        </div>
+        <button class="primary" onclick="createClient()">Save Client</button>
+      </div>
+
+<!-- Selected Client Details & Provision / Case Actions -->
+<div class="card" id="clientDetailsCard" style="display:none; padding:22px;">
+
+  <div class="section-title" style="margin-bottom:20px;">Selected Client</div>
+
+  <div id="clientSummary" class="muted-text">Pick a client to view details.</div>
+
+  <div id="clientDetailFields" style="display:none; margin-top:10px;">
+
+    <!-- Client Info Row -->
+    <div class="row" style="margin-bottom:22px; gap:22px;">
+
+      <div class="half" style="display:flex; flex-direction:column; gap:10px;">
+        <div><span class="muted-text">Name: </span><span id="clientName"></span></div>
+        <div><span class="muted-text">Phone: </span><span id="clientPhone"></span></div>
+        <div><span class="muted-text">Guardians: </span><span id="clientGuardians"></span></div>
+      </div>
+
+      <div class="half" style="display:flex; flex-direction:column; gap:10px;">
+        <div><span class="muted-text">Status: </span><span id="clientStatus" class="pill"></span></div>
+        <div><span class="muted-text">Due Month: </span><span id="clientDue"></span></div>
+        <div><span class="muted-text">Last Activity: </span><span id="clientActivity"></span></div>
+        <div><span class="muted-text">Contract: </span><span id="clientContract"></span></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+          <div class="card" style="margin-top:16px;">
+            <div class="section-title">Quick Provision</div>
+            <div class="helper">Enter quantities for items handed out, clerk initials, and save.</div>
+            <div class="row">
+              <div class="half">
+                <label>Pack Type</label>
+                <select id="packType">
+                  <option value="Enrollment">Enrollment</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Emergency">Emergency</option>
+                  <option value="Special">Special</option>
+                  <option value="None">None</option>
+                </select>
+              </div>
+              <div class="half">
+                <label>Clerk Initials (required)</label>
+                <input id="provisionClerk" type="text" maxlength="6">
+              </div>
+            </div>
+            <div class="item-grid" id="itemGrid">
+              <div class="item-card">
+                <h4>Clothes</h4><p>Onesies / outfits / blankets</p>
+                <input class="item-qty" data-item="Clothes" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Diapers</h4><p>Packs or bundles</p>
+                <input class="item-qty" data-item="Diapers" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Wipes</h4><p>Cases or sleeves</p>
+                <input class="item-qty" data-item="Wipes" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Formula</h4><p>Tubs / cans</p>
+                <input class="item-qty" data-item="Formula" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Bottles</h4><p>Single / set</p>
+                <input class="item-qty" data-item="Bottles" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Blankets</h4><p>Receiving / swaddles</p>
+                <input class="item-qty" data-item="Blankets" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Toys</h4><p>Rattles / soft toys</p>
+                <input class="item-qty" data-item="Toys" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+              <div class="item-card">
+                <h4>Other</h4><p>List in notes</p>
+                <input class="item-qty" data-item="Other" type="number" min="0" inputmode="numeric" placeholder="Qty">
+              </div>
+            </div>
+            <label style="margin-top:16px;">Notes (optional)</label>
+            <textarea id="provisionNotes" placeholder="Add quick notes or list Other items"></textarea>
+            <button class="primary" onclick="saveProvision()">Save Provision</button>
+          </div>
+
+          <div class="card" style="margin-top:16px;">
+            <div class="section-title">Case Actions</div>
+            <div class="helper">Close or reopen with reason and initials.</div>
+            <button id="caseToggle" onclick="toggleCasePanel()">Open Case Actions</button>
+            <div id="caseDetails" style="display:none; margin-top:12px;">
+              <label>Reason / Notes (required)</label>
+              <textarea id="statusReason" placeholder="Born, Completed, Returned, etc."></textarea>
+              <div class="row" style="margin-top:8px;">
+                <div class="half">
+                  <label>Clerk Initials (required)</label>
+                  <input id="statusClerk" type="text" maxlength="6">
+                </div>
+              </div>
+              <div class="actions-row" style="margin-top:12px;">
+                <button class="alt" onclick="reopenCase()">Reopen Case</button>
+                <button onclick="closeCaseAction()">Close Case</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Signature Modal -->
+  <div class="modal" id="signatureModal">
+    <div class="modal-content card" style="max-width: 800px; padding:20px;">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="alt" onclick="closeSignatureModal()">Close</button>
+      </div>
+      <p class="muted-text">Sign below, then press Submit to attach or Clear to reset.</p>
+      <canvas id="signaturePad" class="signature-pad"></canvas>
+      <div class="actions-row" style="margin-top:16px;">
+        <button onclick="clearSignatureCanvas()">Clear</button>
+        <button class="primary" onclick="applySignature()">Submit Signature</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var clients = [];
+    var selectedClient = null;
+    var signaturePad = null;
+    var contractSignatureDraft = '';
+    var signatureTarget = '';
+
+    // === In-page toast instead of browser popups ===
+    (function() {
+      const msgDiv = document.createElement('div');
+      msgDiv.id = 'inPageMessage';
+      msgDiv.style.position = 'fixed';
+      msgDiv.style.top = '20px';
+      msgDiv.style.right = '20px';
+      msgDiv.style.background = 'var(--card)';
+      msgDiv.style.color = 'var(--text)';
+      msgDiv.style.padding = '12px 18px';
+      msgDiv.style.border = '1px solid var(--border)';
+      msgDiv.style.borderRadius = '8px';
+      msgDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+      msgDiv.style.display = 'none';
+      msgDiv.style.zIndex = 11000;
+      msgDiv.style.maxWidth = '260px';
+      msgDiv.style.fontSize = '15px';
+      document.body.appendChild(msgDiv);
+
+      window.showMessage = function(message, type) {
+        msgDiv.textContent = message;
+        msgDiv.style.display = 'block';
+        if (type === 'error') {
+          msgDiv.style.borderColor = 'var(--warn)';
+          msgDiv.style.background = 'rgba(235,111,146,0.95)';
+        } else if (type === 'success') {
+          msgDiv.style.borderColor = 'var(--ok)';
+          msgDiv.style.background = 'rgba(156,207,216,0.95)';
+        } else {
+          msgDiv.style.borderColor = 'var(--accent)';
+          msgDiv.style.background = 'var(--card)';
+        }
+        setTimeout(function() {
+          msgDiv.style.display = 'none';
+        }, 3000);
+      };
+
+      // override browser alert so NO system popup dialogs
+      window.alert = function(message) {
+        showMessage(message, 'error');
+      };
+    })();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initSignaturePad();
+      loadClients();
+      updateNewContractStatus();
+    });
+
+    function initSignaturePad() {
+      var canvas = document.getElementById('signaturePad');
+      var ctx = canvas.getContext('2d');
+      var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#eb6f92';
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2.5;
+      var drawing = false;
+      var drawn = false;
+
+      function setCanvasSize() {
+        var wrapper = canvas.parentNode;
+        var width = wrapper.clientWidth || 720;
+        canvas.width = width - 4;
+        canvas.height = 300;
+      }
+      setCanvasSize();
+      window.addEventListener('resize', setCanvasSize);
+
+      function position(e) {
+        var rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches.length) {
+          return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        }
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+
+      function start(e) {
+        e.preventDefault();
+        drawing = true;
+        drawn = true;
+        ctx.beginPath();
+        var pos = position(e);
+        ctx.moveTo(pos.x, pos.y);
+      }
+      function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        var pos = position(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+      function end() {
+        drawing = false;
+      }
+
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      canvas.addEventListener('mouseup', end);
+      canvas.addEventListener('mouseout', end);
+      canvas.addEventListener('touchstart', start);
+      canvas.addEventListener('touchmove', move);
+      canvas.addEventListener('touchend', end);
+
+      signaturePad = {
+        isBlank: function() { return !drawn; },
+        toDataURL: function() { return canvas.toDataURL('image/png'); },
+        clear: function() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawn = false; },
+        resize: setCanvasSize
+      };
+    }
+
+    function openNewClientCard() {
+      const newCard = document.getElementById('newClientCard');
+      const clientCard = document.getElementById('clientDetailsCard');
+      // hide existing client card if open
+      clientCard.style.display = 'none';
+      // toggle new client intake form
+      newCard.style.display = (newCard.style.display === 'none' || newCard.style.display === '') ? 'block' : 'none';
+    }
+
+    function openSignaturePad(target) {
+      signatureTarget = target;
+      if (!signaturePad) return;
+      signaturePad.clear();
+      signaturePad.resize();
+      document.getElementById('signatureModal').style.display = 'flex';
+    }
+
+    function closeSignatureModal() {
+      document.getElementById('signatureModal').style.display = 'none';
+      signatureTarget = '';
+    }
+
+    function clearSignatureCanvas() {
+      if (signaturePad) signaturePad.clear();
+      if (signatureTarget === 'new') {
+        contractSignatureDraft = '';
+        updateNewContractStatus();
+      }
+    }
+
+    function applySignature() {
+      if (!signaturePad) return;
+      if (signaturePad.isBlank()) {
+        showMessage('Draw a signature before submitting.', 'error');
+        return;
+      }
+      var data = signaturePad.toDataURL();
+      if (signatureTarget === 'new') {
+        contractSignatureDraft = data;
+        updateNewContractStatus();
+        closeSignatureModal();
+        showMessage('Contract signature captured.', 'success');
+      } else {
+        closeSignatureModal();
+      }
+    }
+
+    function updateNewContractStatus() {
+      var label = document.getElementById('newContractStatus');
+      if (!label) return;
+      if (contractSignatureDraft) {
+        label.textContent = 'Signature captured — ready to save';
+        label.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ok').trim() || '#9ccfd8';
+      } else {
+        label.textContent = 'No signature captured';
+        label.style.color = getComputedStyle(document.documentElement).getPropertyValue('--warn').trim() || '#eb6f92';
+      }
+    }
+
+    function loadClients() {
+      google.script.run.withSuccessHandler(function(list) {
+        clients = list || [];
+        renderClientList();
+      }).withFailureHandler(showError).listClients();
+    }
+
+    function renderClientList() {
+      var query = document.getElementById('search').value.toLowerCase();
+      var container = document.getElementById('clientList');
+      container.innerHTML = '';
+      if (!clients.length) {
+        container.innerHTML = '<div class="muted-text">No clients yet.</div>';
+        return;
+      }
+      for (var i = 0; i < clients.length; i++) {
+        var c = clients[i];
+        var text = (c.firstName + ' ' + c.lastName + ' ' + c.phone).toLowerCase();
+        if (query && text.indexOf(query) === -1) continue;
+        var div = document.createElement('div');
+        div.className = 'client-item';
+        (function(id) {
+          div.onclick = function() { selectClient(id); };
+        })(c.clientId);
+        div.innerHTML =
+          '<div class="client-name">' + escapeHtml(c.firstName + ' ' + c.lastName) + '</div>' +
+          '<div class="status">' + escapeHtml(c.status) + ' · ' + escapeHtml(c.phone) + '</div>';
+        container.appendChild(div);
+      }
+    }
+
+    function createClient() {
+      var payload = {
+        firstName: getValue('newFirstName'),
+        lastName: getValue('newLastName'),
+        phone: getValue('newPhone'),
+        guardians: getValue('newGuardians'),
+        dueMonth: getValue('newDueMonth'),
+        notes: getValue('newNotes'),
+        clerk: getValue('newClerk'),
+        signature: contractSignatureDraft
+      };
+      if (!payload.firstName || !payload.lastName || !payload.phone) {
+        showMessage('First name, last name, and phone are required.', 'error');
+        return;
+      }
+      if (!payload.clerk) {
+        showMessage('Clerk initials are required.', 'error');
+        return;
+      }
+      if (!payload.signature) {
+        showMessage('Capture the contract signature before saving.', 'error');
+        return;
+      }
+      google.script.run.withSuccessHandler(function(res) {
+        showMessage('Client saved.', 'success');
+        clearNewClientForm();
+        document.getElementById('newClientCard').style.display = 'none';
+        loadClients();
+        if (res && res.clientId) selectClient(res.clientId);
+      }).withFailureHandler(showError).createClient(payload);
+    }
+
+    function clearNewClientForm() {
+      ['newFirstName','newLastName','newPhone','newGuardians','newDueMonth','newNotes','newClerk'].forEach(function(id) {
+        document.getElementById(id).value = '';
+      });
+      contractSignatureDraft = '';
+      updateNewContractStatus();
+    }
+
+    function selectClient(id) {
+      google.script.run.withSuccessHandler(function(client) {
+        if (!client) { showMessage('Client not found', 'error'); return; }
+        selectedClient = client;
+        displayClient(client);
+      }).withFailureHandler(showError).getClient(id);
+    }
+
+    function displayClient(client) {
+      var card = document.getElementById('clientDetailsCard');
+      card.classList.remove('contract-active', 'contract-closed');
+
+      // hide new client form if open
+      document.getElementById('newClientCard').style.display = 'none';
+
+      document.getElementById('clientDetailFields').style.display = 'block';
+      document.getElementById('clientSummary').style.display = 'none';
+
+      document.getElementById('clientName').textContent = client.firstName + ' ' + client.lastName;
+      document.getElementById('clientPhone').textContent = client.phone;
+      document.getElementById('clientGuardians').textContent = client.guardians || '-';
+      document.getElementById('clientStatus').textContent = client.status || '-';
+      document.getElementById('clientDue').textContent = client.dueMonth || '-';
+      document.getElementById('clientActivity').textContent = client.lastActivity || '-';
+
+      var hasContract = !!client.signature;
+      var contractEl = document.getElementById('clientContract');
+      contractEl.textContent = hasContract ? 'Signature on file' : 'Missing';
+
+      if (hasContract) {
+        card.classList.add('contract-active');
+      } else {
+        card.classList.add('contract-closed');
+      }
+
+      clearItemQuantities();
+      document.getElementById('provisionNotes').value = '';
+      document.getElementById('provisionClerk').value = '';
+      document.getElementById('statusReason').value = '';
+      document.getElementById('statusClerk').value = '';
+      document.getElementById('caseDetails').style.display = 'none';
+      document.getElementById('caseToggle').textContent = 'Open Case Actions';
+
+      card.style.display = 'block';
+    }
+
+    function buildItemsGiven() {
+      var inputs = document.querySelectorAll('.item-qty');
+      var items = [];
+      for (var i = 0; i < inputs.length; i++) {
+        var v = inputs[i].value.trim();
+        if (v) {
+          var qty = parseInt(v, 10);
+          if (qty > 0) {
+            items.push(inputs[i].getAttribute('data-item') + ' x' + qty);
+          }
+        }
+      }
+      return { itemsGiven: items.join('; '), qtyDetails: items.join('; ') };
+    }
+
+    function clearItemQuantities() {
+      var inputs = document.querySelectorAll('.item-qty');
+      inputs.forEach(function(inp) { inp.value = ''; });
+    }
+
+    function saveProvision() {
+      if (!selectedClient) { showMessage('Select a client first.', 'error'); return; }
+      var itemsList = buildItemsGiven();
+      var payload = {
+        clientId: selectedClient.clientId,
+        packType: getValue('packType'),
+        itemsGiven: itemsList.itemsGiven,
+        qtyDetails: itemsList.qtyDetails,
+        notes: getValue('provisionNotes'),
+        clerk: getValue('provisionClerk')
+      };
+      if (!payload.itemsGiven) { showMessage('Enter a quantity for at least one item.', 'error'); return; }
+      if (!payload.clerk) { showMessage('Clerk initials are required.', 'error'); return; }
+      google.script.run.withSuccessHandler(function() {
+        showMessage('Provision saved.', 'success');
+        clearItemQuantities();
+        document.getElementById('provisionNotes').value = '';
+        document.getElementById('provisionClerk').value = '';
+        selectClient(selectedClient.clientId);
+      }).withFailureHandler(showError).saveProvision(payload);
+    }
+
+    function toggleCasePanel() {
+      var panel = document.getElementById('caseDetails');
+      var btn = document.getElementById('caseToggle');
+      var isHidden = panel.style.display === 'none' || panel.style.display === '';
+      panel.style.display = isHidden ? 'block' : 'none';
+      btn.textContent = isHidden ? 'Hide Case Actions' : 'Open Case Actions';
+    }
+
+    function closeCaseAction() {
+      if (!selectedClient) { showMessage('Select a client first.', 'error'); return; }
+      var payload = {
+        clientId: selectedClient.clientId,
+        reason: getValue('statusReason'),
+        clerk: getValue('statusClerk'),
+        notes: ''
+      };
+      if (!payload.reason) { showMessage('Reason is required.', 'error'); return; }
+      if (!payload.clerk) { showMessage('Clerk initials are required.', 'error'); return; }
+      google.script.run.withSuccessHandler(function() {
+        showMessage('Case closed.', 'success');
+        document.getElementById('statusReason').value = '';
+        document.getElementById('statusClerk').value = '';
+        selectClient(selectedClient.clientId);
+      }).withFailureHandler(showError).closeCase(payload);
+    }
+
+    function reopenCase() {
+      if (!selectedClient) { showMessage('Select a client first.', 'error'); return; }
+      var payload = {
+        clientId: selectedClient.clientId,
+        reason: getValue('statusReason'),
+        clerk: getValue('statusClerk'),
+        notes: ''
+      };
+      if (!payload.reason) { showMessage('Reason is required.', 'error'); return; }
+      if (!payload.clerk) { showMessage('Clerk initials are required.', 'error'); return; }
+      google.script.run.withSuccessHandler(function() {
+        showMessage('Case reopened.', 'success');
+        document.getElementById('statusReason').value = '';
+        document.getElementById('statusClerk').value = '';
+        selectClient(selectedClient.clientId);
+      }).withFailureHandler(showError).reopenCase(payload);
+    }
+
+    function getValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showError(err) {
+      var msg = err && err.message ? err.message : err;
+      showMessage('Error: ' + msg, 'error');
+    }
+  </script>
+
+</body>
+</html>
 
