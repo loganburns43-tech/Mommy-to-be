@@ -1,6 +1,9 @@
 var CLIENT_SHEET_NAME = 'MTB Clients';
 var LEDGER_SHEET_NAME = 'MTB Ledger';
 var CONFIG_SHEET_NAME = 'MTB Config';
+var CASE_LOG_SHEET = 'Case Log';
+var PROVISIONS_LOG_SHEET = 'Provisions Log';
+var BIRTH_CLOSE_SHEET = 'Birth/Close Log';
 
 var CLIENT_HEADERS = [
   'ClientID',
@@ -29,15 +32,89 @@ var LEDGER_HEADERS = [
   'Notes'
 ];
 
+var CASE_LOG_HEADERS = [
+  'Timestamp',
+  'ClientID',
+  'Client Name',
+  'Action',
+  'Reason/Notes',
+  'Clerk',
+  'Signature Base64'
+];
+
+var PROVISION_LOG_HEADERS = [
+  'Timestamp',
+  'ClientID',
+  'Client Name',
+  'Pack Type',
+  'Items Given',
+  'Qty/Details',
+  'Final Price',
+  'Clerk',
+  'Signature Base64',
+  'Notes'
+];
+
+var BIRTH_CLOSE_HEADERS = [
+  'Timestamp',
+  'ClientID',
+  'Client Name',
+  'Action (Birth/Close)',
+  'Reason',
+  'Clerk',
+  'Notes'
+];
+
 var CONFIG_SEED = [
   ['PROGRAM_NAME', 'Mommy-To-Be Provisions'],
   ['MONTHLY_LIMIT_DAYS', '30'],
   ['EMERGENCY_LIMIT_DAYS', '30']
 ];
 
+var MTB_MAIN_SHEET = 'Mommy to Be';
+var MTB_CONTRACTS_SHEET = 'Mommy To Be – Contracts';
+var MTB_ITEMS_SHEET = 'Mommy To Be – Items';
+
+var MTB_MAIN_HEADERS = [
+  'Timestamp',
+  'Date',
+  'Mom Last Name',
+  'Mom First Name',
+  'Guardians',
+  'Due Date',
+  'Baby Status (Active / Born / Miscarriage)',
+  'Items Given',
+  'Spent',
+  'Clerk Initials',
+  'Signature (base64 PNG)'
+];
+
+var MTB_CONTRACT_HEADERS = [
+  'Mom Full Name',
+  'Enrollment Date',
+  'Status (Active / Paused / Closed / Reopened)',
+  'Notes',
+  'Last Updated'
+];
+
+var MTB_ITEM_HEADERS = [
+  'Item Category',
+  'Item Name'
+];
+
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Mommy-To-Be Provisions Program');
+}
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Mommy To Be Tools')
+    .addItem('Generate Needed Sheets', 'mtb_generateSheets')
+    .addItem('Recalculate Sheet Data', 'mtb_recalculateData')
+    .addItem('Open Dashboard', 'mtb_openDashboard')
+    .addItem('Rebuild Data Index', 'mtb_rebuildIndex')
+    .addToUi();
 }
 
 function ensureSetup() {
@@ -50,6 +127,18 @@ function ensureSetup() {
   var ledgerSheetResult = ensureSheet(ss, LEDGER_SHEET_NAME, LEDGER_HEADERS);
   if (ledgerSheetResult) {
     results.push(ledgerSheetResult);
+  }
+  var caseLogResult = ensureSheet(ss, CASE_LOG_SHEET, CASE_LOG_HEADERS);
+  if (caseLogResult) {
+    results.push(caseLogResult);
+  }
+  var provisionResult = ensureSheet(ss, PROVISIONS_LOG_SHEET, PROVISION_LOG_HEADERS);
+  if (provisionResult) {
+    results.push(provisionResult);
+  }
+  var birthCloseResult = ensureSheet(ss, BIRTH_CLOSE_SHEET, BIRTH_CLOSE_HEADERS);
+  if (birthCloseResult) {
+    results.push(birthCloseResult);
   }
   var configSheet = ss.getSheetByName(CONFIG_SHEET_NAME);
   var createdConfig = false;
@@ -161,9 +250,9 @@ function createClient(payload) {
     if (!clerk) {
       throw new Error('Clerk initials are required.');
     }
-    var guardians = cleanText(payload.guardians);
-    var dueMonth = cleanText(payload.dueMonth);
-    var notes = cleanText(payload.notes);
+    var guardians = valueOrNA(payload.guardians);
+    var dueMonth = valueOrNA(payload.dueMonth);
+    var notes = valueOrNA(payload.notes);
     var signature = cleanText(payload.signature);
     if (!signature) {
       throw new Error('Contract signature is required.');
@@ -216,17 +305,17 @@ function getClient(clientId) {
 
 function buildClientObject(row) {
   return {
-    clientId: String(row[0] || ''),
-    lastName: String(row[1] || ''),
-    firstName: String(row[2] || ''),
-    phone: String(row[3] || ''),
-    status: String(row[4] || ''),
-    reason: String(row[5] || ''),
-    guardians: String(row[6] || ''),
-    dueMonth: String(row[7] || ''),
-    signature: String(row[8] || ''),
-    lastActivity: String(row[9] || ''),
-    createdAt: String(row[10] || '')
+    clientId: valueOrNA(row[0]),
+    lastName: valueOrNA(row[1]),
+    firstName: valueOrNA(row[2]),
+    phone: valueOrNA(row[3]),
+    status: valueOrNA(row[4]),
+    reason: valueOrNA(row[5]),
+    guardians: valueOrNA(row[6]),
+    dueMonth: valueOrNA(row[7]),
+    signature: valueOrNA(row[8]),
+    lastActivity: valueOrNA(row[9]),
+    createdAt: valueOrNA(row[10])
   };
 }
 
@@ -272,6 +361,8 @@ function saveProvision(payload) {
     var clientId = cleanText(payload.clientId);
     var itemsGiven = cleanText(payload.itemsGiven);
     var clerk = cleanText(payload.clerk);
+    var priceRaw = cleanText(payload.finalPrice);
+    var finalPrice = 0;
     if (!clientId) {
       throw new Error('Client is required.');
     }
@@ -280,6 +371,16 @@ function saveProvision(payload) {
     }
     if (!clerk) {
       throw new Error('Clerk initials are required.');
+    }
+    if (priceRaw === '') {
+      throw new Error('Final price is required.');
+    }
+    if (priceRaw !== '') {
+      var parsed = parseFloat(priceRaw);
+      if (isNaN(parsed) || parsed < 0) {
+        throw new Error('Final price must be a number 0 or higher.');
+      }
+      finalPrice = parsed;
     }
     var sheet = getClientSheet();
     var info = findClientRow(sheet, clientId);
@@ -297,6 +398,7 @@ function saveProvision(payload) {
       itemsGiven: itemsGiven,
       qtyDetails: cleanText(payload.qtyDetails),
       clerk: clerk,
+      finalPrice: finalPrice,
       signature: '',
       notes: cleanText(payload.notes)
     });
@@ -442,13 +544,57 @@ function appendLedger(entry) {
     entry.clientName,
     entry.actionType,
     entry.packType,
-    entry.itemsGiven,
-    entry.qtyDetails,
-    entry.clerk,
-    entry.signature || '',
-    entry.notes
+    valueOrNA(entry.itemsGiven),
+    valueOrNA(entry.qtyDetails),
+    valueOrNA(entry.clerk),
+    entry.signature ? entry.signature : 'N/A',
+    valueOrNA(entry.notes)
   ];
   sheet.appendRow(row);
+
+  var ss = SpreadsheetApp.getActive();
+  if (entry.actionType === 'Provision') {
+    var provisionSheet = ensureSheet(ss, PROVISIONS_LOG_SHEET, PROVISION_LOG_HEADERS) ? ss.getSheetByName(PROVISIONS_LOG_SHEET) : ss.getSheetByName(PROVISIONS_LOG_SHEET);
+    provisionSheet.appendRow([
+      entry.timestamp,
+      entry.clientId,
+      entry.clientName,
+      entry.packType,
+      valueOrNA(entry.itemsGiven),
+      valueOrNA(entry.qtyDetails),
+      valueOrNA(entry.finalPrice || ''),
+      valueOrNA(entry.clerk),
+      entry.signature ? entry.signature : 'N/A',
+      valueOrNA(entry.notes)
+    ]);
+  }
+
+  if (entry.actionType === 'Close Case' || entry.actionType === 'Reopen Case' || entry.actionType === 'Status Update') {
+    var caseSheet = ensureSheet(ss, CASE_LOG_SHEET, CASE_LOG_HEADERS) ? ss.getSheetByName(CASE_LOG_SHEET) : ss.getSheetByName(CASE_LOG_SHEET);
+    caseSheet.appendRow([
+      entry.timestamp,
+      entry.clientId,
+      entry.clientName,
+      entry.actionType,
+      valueOrNA(entry.itemsGiven),
+      valueOrNA(entry.notes),
+      valueOrNA(entry.clerk),
+      entry.signature ? entry.signature : 'N/A'
+    ]);
+  }
+
+  if (entry.actionType === 'Close Case' || entry.actionType === 'Reopen Case') {
+    var bcSheet = ensureSheet(ss, BIRTH_CLOSE_SHEET, BIRTH_CLOSE_HEADERS) ? ss.getSheetByName(BIRTH_CLOSE_SHEET) : ss.getSheetByName(BIRTH_CLOSE_SHEET);
+    bcSheet.appendRow([
+      entry.timestamp,
+      entry.clientId,
+      entry.clientName,
+      entry.actionType,
+      valueOrNA(entry.itemsGiven),
+      valueOrNA(entry.clerk),
+      valueOrNA(entry.notes)
+    ]);
+  }
 }
 
 function getClientSheet() {
@@ -490,4 +636,216 @@ function cleanText(value) {
     return '';
   }
   return String(value).trim();
+}
+
+function valueOrNA(value) {
+  var cleaned = cleanText(value);
+  return cleaned ? cleaned : 'N/A';
+}
+
+function mtb_generateSheets() {
+  var ss = SpreadsheetApp.getActive();
+  ensureMtbMainSheet(ss);
+  ensureMtbContractSheet(ss);
+  ensureMtbItemSheet(ss);
+  ensureSetup();
+  SpreadsheetApp.getActive().toast('Mommy to Be sheets created.');
+  return 'Mommy to Be sheets created.';
+}
+
+function mtb_recalculateData() {
+  ensureMtbMainSheet(SpreadsheetApp.getActive());
+  ensureSetup();
+  SpreadsheetApp.flush();
+  SpreadsheetApp.getActive().toast('Recalculated client index and history.');
+  return 'Recalculated client index and history.';
+}
+
+function mtb_openDashboard() {
+  var html = HtmlService.createHtmlOutputFromFile('MommyToBe')
+    .setWidth(1100)
+    .setHeight(900);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Mommy-To-Be Dashboard');
+}
+
+function mtb_rebuildIndex() {
+  ensureSetup();
+  ensureMtbMainSheet(SpreadsheetApp.getActive());
+  SpreadsheetApp.flush();
+  SpreadsheetApp.getActive().toast('Data index rebuilt and synced.');
+  return 'Data index rebuilt and synced.';
+}
+
+function mtb_saveEntry(data) {
+  var lock = LockService.getDocumentLock();
+  lock.waitLock(30000);
+  try {
+    var momFirstName = cleanText(data && data.momFirstName);
+    var momLastName = cleanText(data && data.momLastName);
+    var guardians = cleanText(data && data.guardians);
+    var itemsGiven = cleanText(data && data.itemsGiven);
+    var clerkInitials = cleanText(data && data.clerkInitials);
+    var signature = cleanText(data && data.signature);
+
+    if (!momFirstName || !momLastName) {
+      throw new Error('Mom first and last name are required.');
+    }
+    if (!guardians) {
+      throw new Error('Guardians are required.');
+    }
+    if (!itemsGiven) {
+      throw new Error('Items Given is required.');
+    }
+    if (!clerkInitials) {
+      throw new Error('Clerk initials are required.');
+    }
+    if (!signature) {
+      throw new Error('Signature is required.');
+    }
+
+    var sheetInfo = getMtbMainSheetValidated();
+    var sheet = sheetInfo.sheet;
+    var timestamp = new Date();
+    var dateValue = cleanText(data && data.date) ? new Date(data.date) : new Date();
+    var dueDateValue = cleanText(data && data.dueDate);
+    var babyStatus = cleanText(data && data.babyStatus) || 'Active';
+    var spentRaw = cleanText(data && data.spent);
+    var spentValue = '';
+    if (spentRaw) {
+      var parsed = parseFloat(spentRaw);
+      if (isNaN(parsed)) {
+        throw new Error('Spent must be a number.');
+      }
+      spentValue = parsed;
+    }
+
+    var row = [
+      timestamp,
+      dateValue,
+      momLastName,
+      momFirstName,
+      guardians,
+      dueDateValue || 'N/A',
+      babyStatus,
+      itemsGiven,
+      spentValue === '' ? 'N/A' : spentValue,
+      clerkInitials,
+      signature
+    ];
+    sheet.appendRow(row);
+    return { success: true, message: 'Entry saved.' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function mtb_getHistory(fullName) {
+  var name = cleanText(fullName);
+  if (!name) {
+    throw new Error('Full name is required to load history.');
+  }
+  var sheetInfo = getMtbMainSheetValidated();
+  var sheet = sheetInfo.sheet;
+  var data = sheet.getDataRange().getValues();
+  var matches = [];
+  var normalized = name.toLowerCase();
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var first = String(row[3] || '').trim();
+    var last = String(row[2] || '').trim();
+    var combined = (first + ' ' + last).toLowerCase();
+    var alternate = (last + ' ' + first).toLowerCase();
+    if (combined === normalized || alternate === normalized) {
+      matches.push({
+        timestamp: row[0],
+        date: row[1],
+        momLastName: last,
+        momFirstName: first,
+        guardians: valueOrNA(row[4]),
+        dueDate: valueOrNA(row[5]),
+        babyStatus: valueOrNA(row[6]),
+        itemsGiven: valueOrNA(row[7]),
+        spent: valueOrNA(row[8]),
+        clerkInitials: valueOrNA(row[9]),
+        signature: valueOrNA(row[10])
+      });
+    }
+  }
+  matches.sort(function(a, b) {
+    var aTime = new Date(a.timestamp).getTime();
+    var bTime = new Date(b.timestamp).getTime();
+    return bTime - aTime;
+  });
+  return matches;
+}
+
+function ensureMtbMainSheet(ss) {
+  var sheet = ss.getSheetByName(MTB_MAIN_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MTB_MAIN_SHEET);
+  }
+  ensureSheetColumns(sheet, MTB_MAIN_HEADERS);
+  return sheet;
+}
+
+function ensureMtbContractSheet(ss) {
+  var sheet = ss.getSheetByName(MTB_CONTRACTS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MTB_CONTRACTS_SHEET);
+  }
+  ensureSheetColumns(sheet, MTB_CONTRACT_HEADERS);
+  return sheet;
+}
+
+function ensureMtbItemSheet(ss) {
+  var sheet = ss.getSheetByName(MTB_ITEMS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MTB_ITEMS_SHEET);
+  }
+  ensureSheetColumns(sheet, MTB_ITEM_HEADERS);
+  if (sheet.getLastRow() < 2) {
+    sheet.getRange(2, 1, 4, 2).setValues([
+      ['Diapers', ''],
+      ['Wipes', ''],
+      ['Formula', ''],
+      ['Clothing (0–3m, 3–6m, etc.)', '']
+    ]);
+  }
+  return sheet;
+}
+
+function ensureSheetColumns(sheet, headers) {
+  var needed = headers.length;
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < needed) {
+    sheet.insertColumnsAfter(maxColumns, needed - maxColumns);
+  }
+  maxColumns = sheet.getMaxColumns();
+  var totalColumns = Math.max(maxColumns, headers.length);
+  var row = [];
+  for (var i = 0; i < totalColumns; i++) {
+    row[i] = headers[i] || '';
+  }
+  sheet.getRange(1, 1, 1, totalColumns).setValues([row]);
+}
+
+function getMtbMainSheetValidated() {
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName(MTB_MAIN_SHEET);
+  if (!sheet) {
+    throw new Error('Mommy to Be sheet is missing. Please run Generate Required Sheets.');
+  }
+  var headerRange = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), MTB_MAIN_HEADERS.length));
+  var headers = headerRange.getValues()[0];
+  var spentIndex = -1;
+  for (var i = 0; i < headers.length; i++) {
+    if (String(headers[i] || '').trim() === 'Spent') {
+      spentIndex = i;
+      break;
+    }
+  }
+  if (spentIndex === -1) {
+    throw new Error("Cannot find 'Spent' column in Mommy to Be sheet.");
+  }
+  return { sheet: sheet, spentIndex: spentIndex };
 }

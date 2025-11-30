@@ -392,7 +392,7 @@
       </div>
 
       <!-- Quick Provision -->
-      <div class="card" style="margin-top:16px;">
+      <div class="card" id="quickProvisionCard" style="margin-top:16px; display:none;">
         <div class="section-title">Quick Provision</div>
         <div class="helper">
           Client has a $30 credit. Enter quantities, clerk initials, and the final price to see remaining credit live.
@@ -475,7 +475,7 @@
       </div>
 
       <!-- Case Actions -->
-      <div class="card" style="margin-top:16px;">
+      <div class="card" id="caseActionsCard" style="margin-top:16px; display:none;">
         <div class="section-title">Case Actions</div>
         <div class="helper">Close or reopen with reason and initials.</div>
         <button id="caseToggle" onclick="toggleCasePanel()">Open Case Actions</button>
@@ -568,6 +568,9 @@
       loadClients();
       updateNewContractStatus();
 
+      // Panels locked until a client is selected or created
+      setPanelAvailability(false);
+
       // Attach live-credit listener after DOM is ready
       var fp = document.getElementById('finalPrice');
       if (fp) {
@@ -588,6 +591,29 @@
       if (caseDetails) caseDetails.style.display = 'none';
       var ct = document.getElementById('caseToggle');
       if (ct) ct.textContent = 'Open Case Actions';
+      setPanelAvailability(false);
+    }
+
+    function setPanelAvailability(enabled) {
+      var quickCard = document.getElementById('quickProvisionCard');
+      var caseCard = document.getElementById('caseActionsCard');
+      [quickCard, caseCard].forEach(function(card) {
+        if (!card) return;
+        card.style.display = enabled ? 'block' : 'none';
+        var fields = card.querySelectorAll('input, select, textarea, button');
+        fields.forEach(function(el) {
+          el.disabled = !enabled;
+        });
+      });
+      // Keep the case panel collapsed each time it unlocks
+      var caseDetails = document.getElementById('caseDetails');
+      if (caseDetails) {
+        caseDetails.style.display = 'none';
+      }
+      var ct = document.getElementById('caseToggle');
+      if (ct) {
+        ct.textContent = 'Open Case Actions';
+      }
     }
 
     function initSignaturePad() {
@@ -812,9 +838,11 @@
       document.getElementById('clientDetailFields').style.display = 'block';
       document.getElementById('clientSummary').style.display = 'none';
 
-      document.getElementById('clientName').textContent = (client.firstName || '') + ' ' + (client.lastName || '');
-      document.getElementById('clientPhone').textContent = client.phone || '-';
-      document.getElementById('clientGuardians').textContent = client.guardians || '-';
+      setPanelAvailability(true);
+
+      document.getElementById('clientName').textContent = formatNA(client.firstName) + ' ' + formatNA(client.lastName);
+      document.getElementById('clientPhone').textContent = formatNA(client.phone);
+      document.getElementById('clientGuardians').textContent = formatNA(client.guardians);
 
       var statusEl = document.getElementById('clientStatus');
       var status = client.status || 'Active';
@@ -827,12 +855,12 @@
         statusEl.style.color = '#191724';
       }
 
-      document.getElementById('clientDue').textContent = client.dueMonth || '-';
-      document.getElementById('clientActivity').textContent = client.lastActivity || '-';
+      document.getElementById('clientDue').textContent = formatNA(client.dueMonth);
+      document.getElementById('clientActivity').textContent = formatNA(client.lastActivity);
 
-      var hasContract = !!client.signature;
+      var hasContract = !!client.signature && client.signature !== 'N/A';
       var contractEl = document.getElementById('clientContract');
-      contractEl.textContent = hasContract ? 'Contract On File' : 'Missing';
+      contractEl.textContent = hasContract ? 'Contract On File' : 'N/A';
       contractEl.style.color = hasContract
         ? getComputedStyle(document.documentElement).getPropertyValue('--ok')
         : getComputedStyle(document.documentElement).getPropertyValue('--warn');
@@ -933,6 +961,7 @@
     }
 
     function toggleCasePanel() {
+      if (!selectedClient) { showMessage('Select a client first.', 'error'); return; }
       var panel = document.getElementById('caseDetails');
       var btn = document.getElementById('caseToggle');
       var isHidden = panel.style.display === 'none' || panel.style.display === '';
@@ -987,6 +1016,10 @@
       return el ? el.value.trim() : '';
     }
 
+    function formatNA(value) {
+      return value ? value : 'N/A';
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -1039,6 +1072,8 @@
       // Reset selectedClient for credit display
       selectedClient = null;
       updateLiveCredit();
+
+      setPanelAvailability(false);
 
       showMessage('Page reset.', 'success');
     }
