@@ -41,15 +41,6 @@
       color: var(--accent);
       letter-spacing: 0.5px;
     }
-    .banner {
-      margin-top: 12px;
-      padding: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 15px;
-      color: var(--muted);
-    }
 
     .container {
       display: flex;
@@ -79,6 +70,32 @@
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
+    }
+
+    /* White outline for all Clerk Initials fields */
+    #newClerk,
+    #provisionClerk,
+    #statusClerk {
+      border: 2px solid #ffffff !important;
+      background: var(--card);
+      font-weight: 700;
+    }
+
+    /* Reset Page button - outlined style */
+    .reset-btn {
+      background: transparent;
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .reset-btn:hover {
+      background: rgba(255,255,255,0.15);
     }
 
     label {
@@ -183,7 +200,7 @@
     }
 
     .signature-pad {
-      background: #ffffff;      /* 🔁 changed to white per request */
+      background: #ffffff;
       border: 2px solid var(--border);
       border-radius: 10px;
       width: 100%;
@@ -274,6 +291,7 @@
         flex: 1 1 100%;
       }
     }
+
   </style>
 </head>
 <body>
@@ -285,6 +303,7 @@
     <!-- Left Column: Search + Client List -->
     <div class="column left-column">
       <div class="card">
+        <button class="reset-btn" onclick="resetPage()">Reset Page</button>
         <label for="search">Search Clients</label>
         <input id="search" type="text" placeholder="Search by name or phone" oninput="renderClientList()">
         <button class="primary" onclick="openNewClientCard()">+ Add New Client</button>
@@ -294,10 +313,13 @@
 
     <!-- Right Column: Main Panel -->
     <div class="column right-column" id="mainPanel">
+
       <!-- New Client Intake -->
       <div class="card" id="newClientCard" style="display:none;">
         <div class="section-title">New Client Intake</div>
-        <div class="helper">Fill details, enter clerk initials, then open the contract to capture a signature before saving.</div>
+        <div class="helper">
+          Fill details, enter clerk initials, open the contract to capture a signature, then save.
+        </div>
         <div class="row">
           <div class="half">
             <label>First Name</label>
@@ -330,121 +352,146 @@
             <div id="newContractStatus" class="muted-text">No signature captured</div>
           </div>
           <div class="half">
-            <button class="primary" onclick="openSignaturePad('new')">Open Contract to Sign</button>
+            <button class="primary" onclick="openSignaturePad('new')">
+              Open Contract (Enrollment / Re-Enrollment)
+            </button>
           </div>
         </div>
         <button class="primary" onclick="createClient()">Save Client</button>
       </div>
 
-<!-- Selected Client Details & Provision / Case Actions -->
-<div class="card" id="clientDetailsCard" style="display:none; padding:22px;">
+      <!-- Selected Client Details & Provision / Case Actions -->
+      <div class="card" id="clientDetailsCard" style="display:none; padding:22px;">
 
-  <div class="section-title" style="margin-bottom:20px;">Selected Client</div>
+        <div class="section-title" style="margin-bottom:20px;">Selected Client</div>
 
-  <div id="clientSummary" class="muted-text">Pick a client to view details.</div>
+        <div id="clientSummary" class="muted-text">Pick a client to view details.</div>
 
-  <div id="clientDetailFields" style="display:none; margin-top:10px;">
+        <div id="clientDetailFields" style="display:none; margin-top:10px;">
 
-    <!-- Client Info Row -->
-    <div class="row" style="margin-bottom:22px; gap:22px;">
+          <!-- Client Info Row -->
+          <div class="row" style="margin-bottom:22px; gap:22px;">
 
-      <div class="half" style="display:flex; flex-direction:column; gap:10px;">
-        <div><span class="muted-text">Name: </span><span id="clientName"></span></div>
-        <div><span class="muted-text">Phone: </span><span id="clientPhone"></span></div>
-        <div><span class="muted-text">Guardians: </span><span id="clientGuardians"></span></div>
+            <div class="half" style="display:flex; flex-direction:column; gap:10px;">
+              <div><span class="muted-text">Name: </span><span id="clientName"></span></div>
+              <div><span class="muted-text">Phone: </span><span id="clientPhone"></span></div>
+              <div><span class="muted-text">Guardians: </span><span id="clientGuardians"></span></div>
+            </div>
+
+            <div class="half" style="display:flex; flex-direction:column; gap:10px;">
+              <div><span class="muted-text">Status: </span><span id="clientStatus" class="pill"></span></div>
+              <div><span class="muted-text">Due Month: </span><span id="clientDue"></span></div>
+              <div><span class="muted-text">Last Activity: </span><span id="clientActivity"></span></div>
+              <div><span class="muted-text">Contract: </span><span id="clientContract"></span></div>
+              <div><span class="muted-text">Credit Remaining: </span><span id="clientCredit"></span></div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
 
-      <div class="half" style="display:flex; flex-direction:column; gap:10px;">
-        <div><span class="muted-text">Status: </span><span id="clientStatus" class="pill"></span></div>
-        <div><span class="muted-text">Due Month: </span><span id="clientDue"></span></div>
-        <div><span class="muted-text">Last Activity: </span><span id="clientActivity"></span></div>
-        <div><span class="muted-text">Contract: </span><span id="clientContract"></span></div>
-      </div>
+      <!-- Quick Provision -->
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Quick Provision</div>
+        <div class="helper">
+          Client has a $30 credit. Enter quantities, clerk initials, and the final price to see remaining credit live.
+        </div>
+        <div class="row">
+          <div class="half">
+            <label>Pack Type</label>
+            <select id="packType">
+              <option value="Enrollment">Enrollment</option>
+            </select>
+          </div>
+          <div class="half">
+            <label>Clerk Initials (required)</label>
+            <input id="provisionClerk" type="text" maxlength="6">
+          </div>
+        </div>
 
-    </div>
+        <div class="item-grid" id="itemGrid">
+          <div class="item-card">
+            <h4>Clothes</h4><p>Onesies / outfits / blankets</p>
+            <input class="item-qty" data-item="Clothes" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Diapers</h4><p>Packs or bundles</p>
+            <input class="item-qty" data-item="Diapers" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Wipes</h4><p>Cases or sleeves</p>
+            <input class="item-qty" data-item="Wipes" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Formula</h4><p>Tubs / cans</p>
+            <input class="item-qty" data-item="Formula" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Bottles</h4><p>Single / set</p>
+            <input class="item-qty" data-item="Bottles" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Blankets</h4><p>Receiving / swaddles</p>
+            <input class="item-qty" data-item="Blankets" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Toys</h4><p>Rattles / soft toys</p>
+            <input class="item-qty" data-item="Toys" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+          <div class="item-card">
+            <h4>Other</h4><p>List in notes</p>
+            <input class="item-qty" data-item="Other" type="number" min="0" inputmode="numeric" placeholder="Qty">
+          </div>
+        </div>
 
-  </div>
-</div>
+        <div class="row" style="margin-top:16px;">
+          <div class="half">
+            <label>Final Price (required)</label>
+            <input id="finalPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
 
-
-          <div class="card" style="margin-top:16px;">
-            <div class="section-title">Quick Provision</div>
-            <div class="helper">Enter quantities for items handed out, clerk initials, and save.</div>
-            <div class="row">
-              <div class="half">
-                <label>Pack Type</label>
-                <select id="packType">
-                  <option value="Enrollment">Enrollment</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Emergency">Emergency</option>
-                  <option value="Special">Special</option>
-                  <option value="None">None</option>
-                </select>
-              </div>
-              <div class="half">
-                <label>Clerk Initials (required)</label>
-                <input id="provisionClerk" type="text" maxlength="6">
-              </div>
+            <!-- Live Credit Box (always visible, updated as you type) -->
+            <div id="liveCreditBox" style="
+              margin-top:10px;
+              padding:12px;
+              background:var(--surface);
+              border:1px solid var(--border);
+              border-radius:8px;
+              font-size:15px;
+            ">
+              <div><span class="muted-text">Credit Before:</span> <span id="liveCreditBefore">$30.00</span></div>
+              <div><span class="muted-text">Price Entered:</span> <span id="livePrice">$0.00</span></div>
+              <div><span class="muted-text">Credit After:</span> <span id="liveCreditAfter">$30.00</span></div>
             </div>
-            <div class="item-grid" id="itemGrid">
-              <div class="item-card">
-                <h4>Clothes</h4><p>Onesies / outfits / blankets</p>
-                <input class="item-qty" data-item="Clothes" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Diapers</h4><p>Packs or bundles</p>
-                <input class="item-qty" data-item="Diapers" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Wipes</h4><p>Cases or sleeves</p>
-                <input class="item-qty" data-item="Wipes" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Formula</h4><p>Tubs / cans</p>
-                <input class="item-qty" data-item="Formula" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Bottles</h4><p>Single / set</p>
-                <input class="item-qty" data-item="Bottles" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Blankets</h4><p>Receiving / swaddles</p>
-                <input class="item-qty" data-item="Blankets" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Toys</h4><p>Rattles / soft toys</p>
-                <input class="item-qty" data-item="Toys" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-              <div class="item-card">
-                <h4>Other</h4><p>List in notes</p>
-                <input class="item-qty" data-item="Other" type="number" min="0" inputmode="numeric" placeholder="Qty">
-              </div>
-            </div>
-            <label style="margin-top:16px;">Notes (optional)</label>
+
+          </div>
+          <div class="half">
+            <label>Notes (optional)</label>
             <textarea id="provisionNotes" placeholder="Add quick notes or list Other items"></textarea>
-            <button class="primary" onclick="saveProvision()">Save Provision</button>
           </div>
+        </div>
 
-          <div class="card" style="margin-top:16px;">
-            <div class="section-title">Case Actions</div>
-            <div class="helper">Close or reopen with reason and initials.</div>
-            <button id="caseToggle" onclick="toggleCasePanel()">Open Case Actions</button>
-            <div id="caseDetails" style="display:none; margin-top:12px;">
-              <label>Reason / Notes (required)</label>
-              <textarea id="statusReason" placeholder="Born, Completed, Returned, etc."></textarea>
-              <div class="row" style="margin-top:8px;">
-                <div class="half">
-                  <label>Clerk Initials (required)</label>
-                  <input id="statusClerk" type="text" maxlength="6">
-                </div>
-              </div>
-              <div class="actions-row" style="margin-top:12px;">
-                <button class="alt" onclick="reopenCase()">Reopen Case</button>
-                <button onclick="closeCaseAction()">Close Case</button>
-              </div>
+        <button class="primary" onclick="saveProvision()">Save Provision</button>
+      </div>
+
+      <!-- Case Actions -->
+      <div class="card" style="margin-top:16px;">
+        <div class="section-title">Case Actions</div>
+        <div class="helper">Close or reopen with reason and initials.</div>
+        <button id="caseToggle" onclick="toggleCasePanel()">Open Case Actions</button>
+        <div id="caseDetails" style="display:none; margin-top:12px;">
+          <label>Reason / Notes (required)</label>
+          <textarea id="statusReason" placeholder="Born, Completed, Returned, etc."></textarea>
+          <div class="row" style="margin-top:8px;">
+            <div class="half">
+              <label>Clerk Initials (required)</label>
+              <input id="statusClerk" type="text" maxlength="6">
             </div>
           </div>
-
+          <div class="actions-row" style="margin-top:12px;">
+            <button class="alt" onclick="reopenCase()">Reopen Case</button>
+            <button onclick="closeCaseAction()">Close Case</button>
+          </div>
         </div>
       </div>
 
@@ -520,10 +567,32 @@
       initSignaturePad();
       loadClients();
       updateNewContractStatus();
+
+      // Attach live-credit listener after DOM is ready
+      var fp = document.getElementById('finalPrice');
+      if (fp) {
+        fp.addEventListener('input', updateLiveCredit);
+      }
+
+      // Initialize live credit display with default 30
+      updateLiveCredit();
     });
+
+    /* ===== Shared helper to hide windows when another opens ===== */
+    function hideAllWindows() {
+      var newCard = document.getElementById('newClientCard');
+      var clientCard = document.getElementById('clientDetailsCard');
+      var caseDetails = document.getElementById('caseDetails');
+      if (newCard) newCard.style.display = 'none';
+      if (clientCard) clientCard.style.display = 'none';
+      if (caseDetails) caseDetails.style.display = 'none';
+      var ct = document.getElementById('caseToggle');
+      if (ct) ct.textContent = 'Open Case Actions';
+    }
 
     function initSignaturePad() {
       var canvas = document.getElementById('signaturePad');
+      if (!canvas) return;
       var ctx = canvas.getContext('2d');
       var accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#eb6f92';
       ctx.strokeStyle = accent;
@@ -584,12 +653,10 @@
     }
 
     function openNewClientCard() {
+      hideAllWindows();
       const newCard = document.getElementById('newClientCard');
-      const clientCard = document.getElementById('clientDetailsCard');
-      // hide existing client card if open
-      clientCard.style.display = 'none';
-      // toggle new client intake form
-      newCard.style.display = (newCard.style.display === 'none' || newCard.style.display === '') ? 'block' : 'none';
+      if (!newCard) return;
+      newCard.style.display = 'block';
     }
 
     function openSignaturePad(target) {
@@ -643,15 +710,20 @@
     }
 
     function loadClients() {
-      google.script.run.withSuccessHandler(function(list) {
-        clients = list || [];
-        renderClientList();
-      }).withFailureHandler(showError).listClients();
+      google.script.run
+        .withSuccessHandler(function(list) {
+          clients = list || [];
+          renderClientList();
+        })
+        .withFailureHandler(showError)
+        .listClients();
     }
 
     function renderClientList() {
-      var query = document.getElementById('search').value.toLowerCase();
+      var queryEl = document.getElementById('search');
       var container = document.getElementById('clientList');
+      if (!container) return;
+      var query = (queryEl ? queryEl.value : '').toLowerCase();
       container.innerHTML = '';
       if (!clients.length) {
         container.innerHTML = '<div class="muted-text">No clients yet.</div>';
@@ -668,7 +740,7 @@
         })(c.clientId);
         div.innerHTML =
           '<div class="client-name">' + escapeHtml(c.firstName + ' ' + c.lastName) + '</div>' +
-          '<div class="status">' + escapeHtml(c.status) + ' · ' + escapeHtml(c.phone) + '</div>';
+          '<div class="status">' + escapeHtml(c.status || '') + ' · ' + escapeHtml(c.phone || '') + '</div>';
         container.appendChild(div);
       }
     }
@@ -696,51 +768,86 @@
         showMessage('Capture the contract signature before saving.', 'error');
         return;
       }
-      google.script.run.withSuccessHandler(function(res) {
-        showMessage('Client saved.', 'success');
-        clearNewClientForm();
-        document.getElementById('newClientCard').style.display = 'none';
-        loadClients();
-        if (res && res.clientId) selectClient(res.clientId);
-      }).withFailureHandler(showError).createClient(payload);
+      google.script.run
+        .withSuccessHandler(function(res) {
+          showMessage('Client saved.', 'success');
+          clearNewClientForm();
+          document.getElementById('newClientCard').style.display = 'none';
+          loadClients();
+          if (res && res.clientId) selectClient(res.clientId);
+        })
+        .withFailureHandler(showError)
+        .createClient(payload);
     }
 
     function clearNewClientForm() {
-      ['newFirstName','newLastName','newPhone','newGuardians','newDueMonth','newNotes','newClerk'].forEach(function(id) {
-        document.getElementById(id).value = '';
-      });
+      ['newFirstName','newLastName','newPhone','newGuardians','newDueMonth','newNotes','newClerk']
+        .forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.value = '';
+        });
       contractSignatureDraft = '';
       updateNewContractStatus();
     }
 
     function selectClient(id) {
-      google.script.run.withSuccessHandler(function(client) {
-        if (!client) { showMessage('Client not found', 'error'); return; }
-        selectedClient = client;
-        displayClient(client);
-      }).withFailureHandler(showError).getClient(id);
+      hideAllWindows();
+      google.script.run
+        .withSuccessHandler(function(client) {
+          if (!client) { showMessage('Client not found', 'error'); return; }
+          selectedClient = client;
+          displayClient(client);
+        })
+        .withFailureHandler(showError)
+        .getClient(id);
     }
 
     function displayClient(client) {
       var card = document.getElementById('clientDetailsCard');
+      if (!card) return;
       card.classList.remove('contract-active', 'contract-closed');
 
-      // hide new client form if open
       document.getElementById('newClientCard').style.display = 'none';
 
       document.getElementById('clientDetailFields').style.display = 'block';
       document.getElementById('clientSummary').style.display = 'none';
 
-      document.getElementById('clientName').textContent = client.firstName + ' ' + client.lastName;
-      document.getElementById('clientPhone').textContent = client.phone;
+      document.getElementById('clientName').textContent = (client.firstName || '') + ' ' + (client.lastName || '');
+      document.getElementById('clientPhone').textContent = client.phone || '-';
       document.getElementById('clientGuardians').textContent = client.guardians || '-';
-      document.getElementById('clientStatus').textContent = client.status || '-';
+
+      var statusEl = document.getElementById('clientStatus');
+      var status = client.status || 'Active';
+      statusEl.textContent = status;
+      if (status.toLowerCase() === 'active') {
+        statusEl.style.backgroundColor = 'var(--ok)';
+        statusEl.style.color = '#191724';
+      } else {
+        statusEl.style.backgroundColor = 'var(--warn)';
+        statusEl.style.color = '#191724';
+      }
+
       document.getElementById('clientDue').textContent = client.dueMonth || '-';
       document.getElementById('clientActivity').textContent = client.lastActivity || '-';
 
       var hasContract = !!client.signature;
       var contractEl = document.getElementById('clientContract');
-      contractEl.textContent = hasContract ? 'Signature on file' : 'Missing';
+      contractEl.textContent = hasContract ? 'Contract On File' : 'Missing';
+      contractEl.style.color = hasContract
+        ? getComputedStyle(document.documentElement).getPropertyValue('--ok')
+        : getComputedStyle(document.documentElement).getPropertyValue('--warn');
+
+      // Credit: default to $30 if not provided
+      var credit = (typeof client.creditBalance === 'number') ? client.creditBalance : 30;
+      selectedClient.creditBalance = credit;
+      var creditEl = document.getElementById('clientCredit');
+      creditEl.textContent = '$' + credit.toFixed(2);
+      if (credit < 0) {
+        creditEl.textContent += ' (Over Credit)';
+        creditEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--warn');
+      } else {
+        creditEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ok');
+      }
 
       if (hasContract) {
         card.classList.add('contract-active');
@@ -751,12 +858,16 @@
       clearItemQuantities();
       document.getElementById('provisionNotes').value = '';
       document.getElementById('provisionClerk').value = '';
+      document.getElementById('finalPrice').value = '';
       document.getElementById('statusReason').value = '';
       document.getElementById('statusClerk').value = '';
       document.getElementById('caseDetails').style.display = 'none';
       document.getElementById('caseToggle').textContent = 'Open Case Actions';
 
       card.style.display = 'block';
+
+      // Update live credit box for this client
+      updateLiveCredit();
     }
 
     function buildItemsGiven() {
@@ -782,23 +893,43 @@
     function saveProvision() {
       if (!selectedClient) { showMessage('Select a client first.', 'error'); return; }
       var itemsList = buildItemsGiven();
+      var finalPriceStr = getValue('finalPrice');
+      var price = parseFloat(finalPriceStr);
+
+      if (!itemsList.itemsGiven) { showMessage('Enter a quantity for at least one item.', 'error'); return; }
+      if (!getValue('provisionClerk')) { showMessage('Clerk initials are required.', 'error'); return; }
+      if (!finalPriceStr) { showMessage('Final price is required.', 'error'); return; }
+      if (isNaN(price) || price < 0) {
+        showMessage('Final price must be a number 0 or higher.', 'error');
+        return;
+      }
+
       var payload = {
         clientId: selectedClient.clientId,
         packType: getValue('packType'),
         itemsGiven: itemsList.itemsGiven,
         qtyDetails: itemsList.qtyDetails,
         notes: getValue('provisionNotes'),
-        clerk: getValue('provisionClerk')
+        clerk: getValue('provisionClerk'),
+        finalPrice: price   // backend should subtract this from creditBalance, can go negative
       };
-      if (!payload.itemsGiven) { showMessage('Enter a quantity for at least one item.', 'error'); return; }
-      if (!payload.clerk) { showMessage('Clerk initials are required.', 'error'); return; }
-      google.script.run.withSuccessHandler(function() {
-        showMessage('Provision saved.', 'success');
-        clearItemQuantities();
-        document.getElementById('provisionNotes').value = '';
-        document.getElementById('provisionClerk').value = '';
-        selectClient(selectedClient.clientId);
-      }).withFailureHandler(showError).saveProvision(payload);
+
+      google.script.run
+        .withSuccessHandler(function(updatedClient) {
+          showMessage('Provision saved.', 'success');
+          clearItemQuantities();
+          document.getElementById('provisionNotes').value = '';
+          document.getElementById('provisionClerk').value = '';
+          document.getElementById('finalPrice').value = '';
+          if (updatedClient && updatedClient.clientId) {
+            selectedClient = updatedClient;
+            displayClient(updatedClient);
+          } else {
+            selectClient(selectedClient.clientId);
+          }
+        })
+        .withFailureHandler(showError)
+        .saveProvision(payload);
     }
 
     function toggleCasePanel() {
@@ -819,12 +950,15 @@
       };
       if (!payload.reason) { showMessage('Reason is required.', 'error'); return; }
       if (!payload.clerk) { showMessage('Clerk initials are required.', 'error'); return; }
-      google.script.run.withSuccessHandler(function() {
-        showMessage('Case closed.', 'success');
-        document.getElementById('statusReason').value = '';
-        document.getElementById('statusClerk').value = '';
-        selectClient(selectedClient.clientId);
-      }).withFailureHandler(showError).closeCase(payload);
+      google.script.run
+        .withSuccessHandler(function() {
+          showMessage('Case closed.', 'success');
+          document.getElementById('statusReason').value = '';
+          document.getElementById('statusClerk').value = '';
+          selectClient(selectedClient.clientId);
+        })
+        .withFailureHandler(showError)
+        .closeCase(payload);
     }
 
     function reopenCase() {
@@ -837,16 +971,20 @@
       };
       if (!payload.reason) { showMessage('Reason is required.', 'error'); return; }
       if (!payload.clerk) { showMessage('Clerk initials are required.', 'error'); return; }
-      google.script.run.withSuccessHandler(function() {
-        showMessage('Case reopened.', 'success');
-        document.getElementById('statusReason').value = '';
-        document.getElementById('statusClerk').value = '';
-        selectClient(selectedClient.clientId);
-      }).withFailureHandler(showError).reopenCase(payload);
+      google.script.run
+        .withSuccessHandler(function() {
+          showMessage('Case reopened.', 'success');
+          document.getElementById('statusReason').value = '';
+          document.getElementById('statusClerk').value = '';
+          selectClient(selectedClient.clientId);
+        })
+        .withFailureHandler(showError)
+        .reopenCase(payload);
     }
 
     function getValue(id) {
-      return document.getElementById(id).value.trim();
+      var el = document.getElementById(id);
+      return el ? el.value.trim() : '';
     }
 
     function escapeHtml(str) {
@@ -859,12 +997,94 @@
         .replace(/'/g, '&#039;');
     }
 
+    function resetPage() {
+      // Close signature modal
+      closeSignatureModal();
+
+      // Hide all panels
+      hideAllWindows();
+
+      // Clear search box
+      var se = document.getElementById('search');
+      if (se) se.value = '';
+
+      // Clear new client fields
+      ['newFirstName','newLastName','newPhone','newGuardians','newDueMonth','newNotes','newClerk']
+        .forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+
+      contractSignatureDraft = '';
+      updateNewContractStatus();
+
+      // Clear provision fields
+      document.querySelectorAll('.item-qty').forEach(function(el){ el.value = ''; });
+      var pn = document.getElementById('provisionNotes');
+      if (pn) pn.value = '';
+      var pc = document.getElementById('provisionClerk');
+      if (pc) pc.value = '';
+      var fp = document.getElementById('finalPrice');
+      if (fp) fp.value = '';
+
+      // Clear case action fields
+      var sr = document.getElementById('statusReason');
+      if (sr) sr.value = '';
+      var sc = document.getElementById('statusClerk');
+      if (sc) sc.value = '';
+
+      // Reset client list view
+      renderClientList();
+
+      // Reset selectedClient for credit display
+      selectedClient = null;
+      updateLiveCredit();
+
+      showMessage('Page reset.', 'success');
+    }
+
     function showError(err) {
       var msg = err && err.message ? err.message : err;
       showMessage('Error: ' + msg, 'error');
     }
+
+    // LIVE CREDIT UPDATE WHILE TYPING FINAL PRICE (always visible box)
+    function updateLiveCredit() {
+      var beforeEl = document.getElementById("liveCreditBefore");
+      var priceEl  = document.getElementById("livePrice");
+      var afterEl  = document.getElementById("liveCreditAfter");
+      var priceInput = document.getElementById("finalPrice");
+
+      if (!beforeEl || !priceEl || !afterEl || !priceInput) return;
+
+      var raw = priceInput.value.trim();
+      var price = parseFloat(raw);
+      if (isNaN(price) || price < 0) {
+        price = 0;
+      }
+
+      var before;
+      if (selectedClient && typeof selectedClient.creditBalance === 'number') {
+        before = selectedClient.creditBalance;
+      } else {
+        // default program credit = 30 when no client or no stored balance
+        before = 30;
+      }
+
+      var after = before - price;
+
+      beforeEl.textContent = "$" + before.toFixed(2);
+      priceEl.textContent  = "$" + price.toFixed(2);
+      afterEl.textContent  = "$" + after.toFixed(2);
+
+      if (after < 0) {
+        afterEl.style.color = "var(--warn)";
+      } else {
+        afterEl.style.color = "var(--ok)";
+      }
+    }
+
   </script>
 
 </body>
 </html>
-
