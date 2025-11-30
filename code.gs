@@ -35,9 +35,47 @@ var CONFIG_SEED = [
   ['EMERGENCY_LIMIT_DAYS', '30']
 ];
 
+var MTB_MAIN_SHEET = 'Mommy to Be';
+var MTB_CONTRACTS_SHEET = 'Mommy To Be – Contracts';
+var MTB_ITEMS_SHEET = 'Mommy To Be – Items';
+
+var MTB_MAIN_HEADERS = [
+  'Timestamp',
+  'Date',
+  'Mom Last Name',
+  'Mom First Name',
+  'Guardians',
+  'Due Date',
+  'Baby Status (Active / Born / Miscarriage)',
+  'Items Given',
+  'Spent',
+  'Clerk Initials',
+  'Signature (base64 PNG)'
+];
+
+var MTB_CONTRACT_HEADERS = [
+  'Mom Full Name',
+  'Enrollment Date',
+  'Status (Active / Paused / Closed / Reopened)',
+  'Notes',
+  'Last Updated'
+];
+
+var MTB_ITEM_HEADERS = [
+  'Item Category',
+  'Item Name'
+];
+
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Mommy-To-Be Provisions Program');
+}
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Mommy To Be Tools')
+    .addItem('Generate Required Sheets', 'mtb_generateSheets')
+    .addToUi();
 }
 
 function ensureSetup() {
@@ -490,4 +528,187 @@ function cleanText(value) {
     return '';
   }
   return String(value).trim();
+}
+
+function mtb_generateSheets() {
+  var ss = SpreadsheetApp.getActive();
+  ensureMtbMainSheet(ss);
+  ensureMtbContractSheet(ss);
+  ensureMtbItemSheet(ss);
+  SpreadsheetApp.getActive().toast('Mommy to Be sheets created.');
+  return 'Mommy to Be sheets created.';
+}
+
+function mtb_saveEntry(data) {
+  var lock = LockService.getDocumentLock();
+  lock.waitLock(30000);
+  try {
+    var momFirstName = cleanText(data && data.momFirstName);
+    var momLastName = cleanText(data && data.momLastName);
+    var guardians = cleanText(data && data.guardians);
+    var itemsGiven = cleanText(data && data.itemsGiven);
+    var clerkInitials = cleanText(data && data.clerkInitials);
+    var signature = cleanText(data && data.signature);
+
+    if (!momFirstName || !momLastName) {
+      throw new Error('Mom first and last name are required.');
+    }
+    if (!guardians) {
+      throw new Error('Guardians are required.');
+    }
+    if (!itemsGiven) {
+      throw new Error('Items Given is required.');
+    }
+    if (!clerkInitials) {
+      throw new Error('Clerk initials are required.');
+    }
+    if (!signature) {
+      throw new Error('Signature is required.');
+    }
+
+    var sheetInfo = getMtbMainSheetValidated();
+    var sheet = sheetInfo.sheet;
+    var timestamp = new Date();
+    var dateValue = cleanText(data && data.date) ? new Date(data.date) : new Date();
+    var dueDateValue = cleanText(data && data.dueDate);
+    var babyStatus = cleanText(data && data.babyStatus) || 'Active';
+    var spentRaw = cleanText(data && data.spent);
+    var spentValue = '';
+    if (spentRaw) {
+      var parsed = parseFloat(spentRaw);
+      if (isNaN(parsed)) {
+        throw new Error('Spent must be a number.');
+      }
+      spentValue = parsed;
+    }
+
+    var row = [
+      timestamp,
+      dateValue,
+      momLastName,
+      momFirstName,
+      guardians,
+      dueDateValue,
+      babyStatus,
+      itemsGiven,
+      spentValue,
+      clerkInitials,
+      signature
+    ];
+    sheet.appendRow(row);
+    return { success: true, message: 'Entry saved.' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function mtb_getHistory(fullName) {
+  var name = cleanText(fullName);
+  if (!name) {
+    throw new Error('Full name is required to load history.');
+  }
+  var sheetInfo = getMtbMainSheetValidated();
+  var sheet = sheetInfo.sheet;
+  var data = sheet.getDataRange().getValues();
+  var matches = [];
+  var normalized = name.toLowerCase();
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var first = String(row[3] || '').trim();
+    var last = String(row[2] || '').trim();
+    var combined = (first + ' ' + last).toLowerCase();
+    var alternate = (last + ' ' + first).toLowerCase();
+    if (combined === normalized || alternate === normalized) {
+      matches.push({
+        timestamp: row[0],
+        date: row[1],
+        momLastName: last,
+        momFirstName: first,
+        guardians: row[4],
+        dueDate: row[5],
+        babyStatus: row[6],
+        itemsGiven: row[7],
+        spent: row[8],
+        clerkInitials: row[9],
+        signature: row[10]
+      });
+    }
+  }
+  matches.sort(function(a, b) {
+    var aTime = new Date(a.timestamp).getTime();
+    var bTime = new Date(b.timestamp).getTime();
+    return bTime - aTime;
+  });
+  return matches;
+}
+
+function ensureMtbMainSheet(ss) {
+  var sheet = ss.getSheetByName(MTB_MAIN_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MTB_MAIN_SHEET);
+  }
+  ensureSheetColumns(sheet, MTB_MAIN_HEADERS);
+  return sheet;
+}
+
+function ensureMtbContractSheet(ss) {
+  var sheet = ss.getSheetByName(MTB_CONTRACTS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MTB_CONTRACTS_SHEET);
+  }
+  ensureSheetColumns(sheet, MTB_CONTRACT_HEADERS);
+  return sheet;
+}
+
+function ensureMtbItemSheet(ss) {
+  var sheet = ss.getSheetByName(MTB_ITEMS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(MTB_ITEMS_SHEET);
+  }
+  ensureSheetColumns(sheet, MTB_ITEM_HEADERS);
+  if (sheet.getLastRow() < 2) {
+    sheet.getRange(2, 1, 4, 2).setValues([
+      ['Diapers', ''],
+      ['Wipes', ''],
+      ['Formula', ''],
+      ['Clothing (0–3m, 3–6m, etc.)', '']
+    ]);
+  }
+  return sheet;
+}
+
+function ensureSheetColumns(sheet, headers) {
+  var needed = headers.length;
+  var maxColumns = sheet.getMaxColumns();
+  if (maxColumns < needed) {
+    sheet.insertColumnsAfter(maxColumns, needed - maxColumns);
+  }
+  maxColumns = sheet.getMaxColumns();
+  var totalColumns = Math.max(maxColumns, headers.length);
+  var row = [];
+  for (var i = 0; i < totalColumns; i++) {
+    row[i] = headers[i] || '';
+  }
+  sheet.getRange(1, 1, 1, totalColumns).setValues([row]);
+}
+
+function getMtbMainSheetValidated() {
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName(MTB_MAIN_SHEET);
+  if (!sheet) {
+    throw new Error('Mommy to Be sheet is missing. Please run Generate Required Sheets.');
+  }
+  var headerRange = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), MTB_MAIN_HEADERS.length));
+  var headers = headerRange.getValues()[0];
+  var spentIndex = -1;
+  for (var i = 0; i < headers.length; i++) {
+    if (String(headers[i] || '').trim() === 'Spent') {
+      spentIndex = i;
+      break;
+    }
+  }
+  if (spentIndex === -1) {
+    throw new Error("Cannot find 'Spent' column in Mommy to Be sheet.");
+  }
+  return { sheet: sheet, spentIndex: spentIndex };
 }
