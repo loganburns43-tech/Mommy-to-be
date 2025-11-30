@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #191724;
+      --card: #1f1d2e;
+      --surface: #26233a;
+      --border: #403d52;
+      --text: #e0def4;
+      --muted: #6e6a86;
+      --accent: #eb6f92;
+      --secondary: #31748f;
+      --ok: #9ccfd8;
+      --cta: #f6c177;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 16px;
+      text-align: center;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+    }
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      color: var(--cta);
+    }
+    .banner {
+      margin-top: 8px;
+      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 12px;
+      gap: 12px;
+    }
+    .column {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    .left-column {
+      flex: 1 1 280px;
+      max-width: 340px;
+    }
+    .right-column {
+      flex: 2 1 560px;
+      min-width: 320px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+    button {
+      background: var(--secondary);
+      border: none;
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+    button.primary {
+      background: var(--accent);
+    }
+    button.cta {
+      background: var(--cta);
+      color: #1f1d2e;
+      font-weight: 700;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .client-list {
+      max-height: 65vh;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .client-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .client-item:hover {
+      border-color: var(--accent);
+    }
+    .client-name {
+      font-weight: 700;
+      color: var(--text);
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .section-title {
+      font-size: 18px;
+      margin: 0 0 8px 0;
+      color: var(--cta);
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .row .half {
+      flex: 1 1 48%;
+    }
+    .row .third {
+      flex: 1 1 30%;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--border);
+      color: var(--text);
+      margin-right: 6px;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    .history-entry {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 0;
+    }
+    .history-entry:last-child {
+      border-bottom: none;
+    }
+    .history-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .signature-pad {
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      width: 100%;
+      height: 160px;
+      touch-action: none;
+    }
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .actions-row button {
+      flex: 1 1 48%;
+    }
+    .muted-text {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .pill {
+      display: inline-block;
+      background: var(--accent);
+      color: #1f1d2e;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(25, 23, 36, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      box-sizing: border-box;
+      z-index: 50;
+    }
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: var(--cta);
+    }
+    .close-btn {
+      background: var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      width: auto;
+    }
+    @media (max-width: 900px) {
+      .left-column {
+        max-width: 100%;
+      }
+      .right-column {
+        max-width: 100%;
+      }
+      button {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mommy-To-Be Provisions Program</h1>
+    <div class="banner">This program provides provisions and items only. Not medical care.</div>
+  </header>
+  <div class="container">
+    <div class="column left-column">
+      <div class="card">
+        <label for="search">Search Clients</label>
+        <input id="search" type="text" placeholder="Search by name or phone" oninput="renderClientList()">
+        <button class="cta" onclick="openNewClientCard()">+ Add New Client</button>
+        <div class="client-list" id="clientList"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Admin</div>
+        <button onclick="runSetup()">Generate / Repair Sheets</button>
+        <div id="setupResult" class="muted-text"></div>
+      </div>
+    </div>
+    <div class="column right-column" id="mainPanel">
+      <div class="card" id="newClientCard" style="display:none;">
+        <div class="section-title">New Client Intake</div>
+        <div class="row">
+          <div class="half">
+            <label>First Name</label>
+            <input id="newFirstName" type="text">
+          </div>
+          <div class="half">
+            <label>Last Name</label>
+            <input id="newLastName" type="text">
+          </div>
+        </div>
+        <label>Phone</label>
+        <input id="newPhone" type="tel" placeholder="555-555-5555">
+        <label>Guardians</label>
+        <textarea id="newGuardians"></textarea>
+        <div class="row">
+          <div class="third">
+            <label>Household Kids Count</label>
+            <input id="newKidsCount" type="number" min="0">
+          </div>
+          <div class="third">
+            <label>Due Month (YYYY-MM)</label>
+            <input id="newDueMonth" type="month">
+          </div>
+          <div class="third">
+            <label>Clerk Initials (required)</label>
+            <input id="newClerk" type="text" maxlength="6">
+          </div>
+        </div>
+        <label>Kids Names/Ages</label>
+        <textarea id="newKidsInfo" placeholder="Names, ages"></textarea>
+        <label>Notes</label>
+        <textarea id="newNotes" placeholder="Intake notes"></textarea>
+        <button class="primary" onclick="createClient()">Save Client</button>
+      </div>
+
+      <div class="card" id="clientDetailsCard">
+        <div class="section-title">Selected Client</div>
+        <div id="clientSummary" class="muted-text">Pick a client to view details.</div>
+        <div id="clientDetailFields" style="display:none;">
+          <div class="row">
+            <div class="half">
+              <div><span class="muted-text">Name:</span> <span id="clientName"></span></div>
+              <div><span class="muted-text">Phone:</span> <span id="clientPhone"></span></div>
+              <div><span class="muted-text">Guardians:</span> <span id="clientGuardians"></span></div>
+            </div>
+            <div class="half">
+              <div><span class="muted-text">Status:</span> <span id="clientStatus" class="pill"></span></div>
+              <div><span class="muted-text">Due Month:</span> <span id="clientDue"></span></div>
+              <div><span class="muted-text">Kids:</span> <span id="clientKids"></span></div>
+              <div><span class="muted-text">Last Activity:</span> <span id="clientActivity"></span></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:10px;">
+            <div class="section-title">Add Provision</div>
+            <div class="row">
+              <div class="half">
+                <label>Pack Type</label>
+                <select id="packType">
+                  <option value="Enrollment">Enrollment</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Emergency">Emergency</option>
+                  <option value="Special">Special</option>
+                  <option value="None">None</option>
+                </select>
+              </div>
+              <div class="half">
+                <label>Clerk Initials (required)</label>
+                <input id="provisionClerk" type="text" maxlength="6">
+              </div>
+            </div>
+            <label>Items Given (required)</label>
+            <textarea id="itemsGiven" placeholder="List items provided"></textarea>
+            <label>Qty/Details (optional)</label>
+            <textarea id="qtyDetails" placeholder="Quantities or item notes"></textarea>
+            <label>Notes (optional)</label>
+            <textarea id="provisionNotes"></textarea>
+            <label>Signature (optional)</label>
+            <canvas id="provisionPad" class="signature-pad"></canvas>
+            <button onclick="clearSignature('provision')">Clear Signature</button>
+            <button class="primary" onclick="saveProvision()">Save Provision</button>
+          </div>
+
+          <div class="card" style="margin-top:10px;">
+            <div class="section-title">Case Status</div>
+            <label>Reason / Notes (required)</label>
+            <textarea id="statusReason" placeholder="Born, Completed, Returned, etc."></textarea>
+            <div class="row">
+              <div class="half">
+                <label>Baby Born Date (YYYY-MM-DD)</label>
+                <input id="babyBornDate" type="date">
+              </div>
+              <div class="half">
+                <label>Clerk Initials (required)</label>
+                <input id="statusClerk" type="text" maxlength="6">
+              </div>
+            </div>
+            <label>Signature (optional)</label>
+            <canvas id="statusPad" class="signature-pad"></canvas>
+            <button onclick="clearSignature('status')">Clear Signature</button>
+            <div class="actions-row">
+              <button onclick="reopenCase()">Reopen Case</button>
+              <button class="primary" onclick="closeCaseAction()">Close Case</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:10px;">
+            <div class="section-title">Recent History</div>
+            <div id="historyList"></div>
+            <button onclick="openHistoryModal()">View Full History</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="historyModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Full History</h3>
+        <button class="close-btn" onclick="closeHistoryModal()">Close</button>
+      </div>
+      <div id="fullHistory"></div>
+    </div>
+  </div>
+
+  <script>
+    var clients = [];
+    var selectedClient = null;
+    var signaturePads = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initPads();
+      loadClients();
+    });
+
+    function initPads() {
+      signaturePads.provision = buildPad('provisionPad');
+      signaturePads.status = buildPad('statusPad');
+    }
+
+    function buildPad(id) {
+      var canvas = document.getElementById(id);
+      var ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#eb6f92';
+      ctx.lineWidth = 2.5;
+      var drawing = false;
+      var drawn = false;
+
+      function resize() {
+        var rect = canvas.getBoundingClientRect();
+        var old = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        ctx.putImageData(old, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function start(e) {
+        drawing = true;
+        drawn = true;
+        ctx.beginPath();
+        var pos = position(e);
+        ctx.moveTo(pos.x, pos.y);
+      }
+      function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        var pos = position(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+      function end() {
+        drawing = false;
+      }
+      function position(e) {
+        var rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches.length) {
+          return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        }
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', move);
+      canvas.addEventListener('mouseup', end);
+      canvas.addEventListener('mouseout', end);
+      canvas.addEventListener('touchstart', function(e) { start(e); });
+      canvas.addEventListener('touchmove', function(e) { move(e); });
+      canvas.addEventListener('touchend', end);
+
+      return {
+        isBlank: function() { return !drawn; },
+        toDataURL: function() { return canvas.toDataURL('image/png'); },
+        clear: function() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawn = false; }
+      };
+    }
+
+    function clearSignature(type) {
+      if (signaturePads[type]) {
+        signaturePads[type].clear();
+      }
+    }
+
+    function loadClients() {
+      google.script.run.withSuccessHandler(function(list) {
+        clients = list || [];
+        renderClientList();
+      }).withFailureHandler(showError).listClients();
+    }
+
+    function renderClientList() {
+      var query = document.getElementById('search').value.toLowerCase();
+      var container = document.getElementById('clientList');
+      container.innerHTML = '';
+      if (!clients.length) {
+        container.innerHTML = '<div class="muted-text">No clients yet.</div>';
+        return;
+      }
+      for (var i = 0; i < clients.length; i++) {
+        var c = clients[i];
+        var text = (c.firstName + ' ' + c.lastName + ' ' + c.phone).toLowerCase();
+        if (query && text.indexOf(query) === -1) {
+          continue;
+        }
+        var div = document.createElement('div');
+        div.className = 'client-item';
+        div.onclick = (function(id) {
+          return function() { selectClient(id); };
+        })(c.clientId);
+        div.innerHTML = '<div class="client-name">' + escapeHtml(c.firstName + ' ' + c.lastName) + '</div>' +
+          '<div class="status">' + escapeHtml(c.status) + ' · ' + escapeHtml(c.phone) + '</div>' +
+          '<div class="status">Last Activity: ' + escapeHtml(c.lastActivity || '-') + '</div>';
+        container.appendChild(div);
+      }
+    }
+
+    function openNewClientCard() {
+      var card = document.getElementById('newClientCard');
+      card.style.display = card.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function createClient() {
+      var payload = {
+        firstName: getValue('newFirstName'),
+        lastName: getValue('newLastName'),
+        phone: getValue('newPhone'),
+        guardians: getValue('newGuardians'),
+        kidsCount: getValue('newKidsCount'),
+        kidsInfo: getValue('newKidsInfo'),
+        dueMonth: getValue('newDueMonth'),
+        notes: getValue('newNotes'),
+        clerk: getValue('newClerk')
+      };
+      if (!payload.firstName || !payload.lastName || !payload.phone) {
+        alert('First name, last name, and phone are required.');
+        return;
+      }
+      if (!payload.clerk) {
+        alert('Clerk initials are required.');
+        return;
+      }
+      google.script.run.withSuccessHandler(function(res) {
+        alert('Client saved.');
+        clearNewClientForm();
+        document.getElementById('newClientCard').style.display = 'none';
+        loadClients();
+        if (res && res.clientId) {
+          selectClient(res.clientId);
+        }
+      }).withFailureHandler(showError).createClient(payload);
+    }
+
+    function clearNewClientForm() {
+      var ids = ['newFirstName','newLastName','newPhone','newGuardians','newKidsCount','newKidsInfo','newDueMonth','newNotes','newClerk'];
+      for (var i = 0; i < ids.length; i++) {
+        document.getElementById(ids[i]).value = '';
+      }
+    }
+
+    function selectClient(id) {
+      google.script.run.withSuccessHandler(function(client) {
+        if (!client) {
+          alert('Client not found');
+          return;
+        }
+        selectedClient = client;
+        displayClient(client);
+        loadHistory();
+      }).withFailureHandler(showError).getClient(id);
+    }
+
+    function displayClient(client) {
+      document.getElementById('clientDetailFields').style.display = 'block';
+      document.getElementById('clientSummary').style.display = 'none';
+      document.getElementById('clientName').textContent = client.firstName + ' ' + client.lastName;
+      document.getElementById('clientPhone').textContent = client.phone;
+      document.getElementById('clientGuardians').textContent = client.guardians || '-';
+      document.getElementById('clientStatus').textContent = client.status || '-';
+      document.getElementById('clientDue').textContent = client.dueMonth || '-';
+      document.getElementById('clientKids').textContent = (client.kidsCount || '0') + ' kids · ' + (client.kidsInfo || '');
+      document.getElementById('clientActivity').textContent = client.lastActivity || '-';
+      clearSignature('provision');
+      clearSignature('status');
+      document.getElementById('itemsGiven').value = '';
+      document.getElementById('qtyDetails').value = '';
+      document.getElementById('provisionNotes').value = '';
+      document.getElementById('provisionClerk').value = '';
+      document.getElementById('statusReason').value = '';
+      document.getElementById('babyBornDate').value = '';
+      document.getElementById('statusClerk').value = '';
+    }
+
+    function loadHistory() {
+      if (!selectedClient) return;
+      google.script.run.withSuccessHandler(function(rows) {
+        renderHistory(rows, document.getElementById('historyList'));
+      }).withFailureHandler(showError).getClientHistory(selectedClient.clientId, 8);
+    }
+
+    function openHistoryModal() {
+      if (!selectedClient) return;
+      google.script.run.withSuccessHandler(function(rows) {
+        renderHistory(rows, document.getElementById('fullHistory'));
+        document.getElementById('historyModal').style.display = 'flex';
+      }).withFailureHandler(showError).getClientHistoryAll(selectedClient.clientId);
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').style.display = 'none';
+    }
+
+    function renderHistory(rows, container) {
+      container.innerHTML = '';
+      if (!rows || !rows.length) {
+        container.innerHTML = '<div class="muted-text">No history yet.</div>';
+        return;
+      }
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var sig = r.signature ? '<span class="tag">Signature</span>' : '';
+        var div = document.createElement('div');
+        div.className = 'history-entry';
+        div.innerHTML = '<div><strong>' + escapeHtml(r.actionType) + '</strong> · ' + escapeHtml(r.packType || '-') + '</div>' +
+          '<div class="history-label">' + escapeHtml(r.timestamp) + ' · Clerk: ' + escapeHtml(r.clerk || '-') + '</div>' +
+          '<div>' + escapeHtml(r.itemsGiven || '') + '</div>' +
+          '<div class="history-label">Qty/Details: ' + escapeHtml(r.qtyDetails || '-') + '</div>' +
+          '<div class="history-label">Notes: ' + escapeHtml(r.notes || '-') + ' ' + sig + '</div>';
+        container.appendChild(div);
+      }
+    }
+
+    function saveProvision() {
+      if (!selectedClient) { alert('Select a client first.'); return; }
+      var payload = {
+        clientId: selectedClient.clientId,
+        packType: getValue('packType'),
+        itemsGiven: getValue('itemsGiven'),
+        qtyDetails: getValue('qtyDetails'),
+        notes: getValue('provisionNotes'),
+        clerk: getValue('provisionClerk')
+      };
+      if (!payload.itemsGiven) {
+        alert('Items Given is required.');
+        return;
+      }
+      if (!payload.clerk) {
+        alert('Clerk initials are required.');
+        return;
+      }
+      if (!signaturePads.provision.isBlank()) {
+        payload.signature = signaturePads.provision.toDataURL();
+      } else {
+        payload.signature = '';
+      }
+      google.script.run.withSuccessHandler(function() {
+        alert('Provision saved.');
+        clearSignature('provision');
+        document.getElementById('itemsGiven').value = '';
+        document.getElementById('qtyDetails').value = '';
+        document.getElementById('provisionNotes').value = '';
+        document.getElementById('provisionClerk').value = '';
+        selectClient(selectedClient.clientId);
+      }).withFailureHandler(showError).saveProvision(payload);
+    }
+
+    function closeCaseAction() {
+      if (!selectedClient) { alert('Select a client first.'); return; }
+      var payload = {
+        clientId: selectedClient.clientId,
+        reason: getValue('statusReason'),
+        babyBornDate: getValue('babyBornDate'),
+        clerk: getValue('statusClerk'),
+        notes: ''
+      };
+      if (!payload.reason) { alert('Reason is required.'); return; }
+      if (!payload.clerk) { alert('Clerk initials are required.'); return; }
+      payload.signature = signaturePads.status.isBlank() ? '' : signaturePads.status.toDataURL();
+      google.script.run.withSuccessHandler(function() {
+        alert('Case closed.');
+        clearSignature('status');
+        document.getElementById('statusReason').value = '';
+        document.getElementById('babyBornDate').value = '';
+        document.getElementById('statusClerk').value = '';
+        selectClient(selectedClient.clientId);
+      }).withFailureHandler(showError).closeCase(payload);
+    }
+
+    function reopenCase() {
+      if (!selectedClient) { alert('Select a client first.'); return; }
+      var payload = {
+        clientId: selectedClient.clientId,
+        reason: getValue('statusReason'),
+        clerk: getValue('statusClerk'),
+        notes: ''
+      };
+      if (!payload.reason) { alert('Reason is required.'); return; }
+      if (!payload.clerk) { alert('Clerk initials are required.'); return; }
+      payload.signature = signaturePads.status.isBlank() ? '' : signaturePads.status.toDataURL();
+      google.script.run.withSuccessHandler(function() {
+        alert('Case reopened.');
+        clearSignature('status');
+        document.getElementById('statusReason').value = '';
+        document.getElementById('babyBornDate').value = '';
+        document.getElementById('statusClerk').value = '';
+        selectClient(selectedClient.clientId);
+      }).withFailureHandler(showError).reopenCase(payload);
+    }
+
+    function runSetup() {
+      google.script.run.withSuccessHandler(function(msg) {
+        document.getElementById('setupResult').textContent = msg;
+        loadClients();
+      }).withFailureHandler(showError).ensureSetup();
+    }
+
+    function getValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showError(err) {
+      var msg = err && err.message ? err.message : err;
+      alert('Error: ' + msg);
+    }
+  </script>
+</body>
+</html>
