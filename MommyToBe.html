@@ -376,15 +376,17 @@
               <div><span class="muted-text">Name: </span><span id="clientName"></span></div>
               <div><span class="muted-text">Phone: </span><span id="clientPhone"></span></div>
               <div><span class="muted-text">Guardians: </span><span id="clientGuardians"></span></div>
+              <div><span class="muted-text">Contract Limit: </span><span id="clientContractLimit">$30.00</span></div>
+              <div><span class="muted-text">Contract Spend: </span><span id="clientSpend">$0.00</span></div>
             </div>
 
-            <div class="half" style="display:flex; flex-direction:column; gap:10px;">
-              <div><span class="muted-text">Status: </span><span id="clientStatus" class="pill"></span></div>
-              <div><span class="muted-text">Due Month: </span><span id="clientDue"></span></div>
-              <div><span class="muted-text">Last Activity: </span><span id="clientActivity"></span></div>
-              <div><span class="muted-text">Contract: </span><span id="clientContract"></span></div>
-              <div><span class="muted-text">Credit Remaining: </span><span id="clientCredit"></span></div>
-            </div>
+          <div class="half" style="display:flex; flex-direction:column; gap:10px;">
+            <div><span class="muted-text">Status: </span><span id="clientStatus" class="pill"></span></div>
+            <div><span class="muted-text">Due Month: </span><span id="clientDue"></span></div>
+            <div><span class="muted-text">Last Activity: </span><span id="clientActivity"></span></div>
+            <div><span class="muted-text">Contract: </span><span id="clientContract"></span></div>
+            <div><span class="muted-text">Credit Remaining: </span><span id="clientCredit"></span></div>
+          </div>
 
           </div>
 
@@ -392,10 +394,10 @@
       </div>
 
       <!-- Quick Provision -->
-      <div class="card" style="margin-top:16px;">
+      <div class="card" id="quickProvisionCard" style="margin-top:16px; display:none;">
         <div class="section-title">Quick Provision</div>
         <div class="helper">
-          Client has a $30 credit. Enter quantities, clerk initials, and the final price to see remaining credit live.
+          <span id="creditHelper">Client contract credit applies. Enter quantities, clerk initials, and the final price to see remaining credit live.</span>
         </div>
         <div class="row">
           <div class="half">
@@ -475,7 +477,7 @@
       </div>
 
       <!-- Case Actions -->
-      <div class="card" style="margin-top:16px;">
+      <div class="card" id="caseActionsCard" style="margin-top:16px; display:none;">
         <div class="section-title">Case Actions</div>
         <div class="helper">Close or reopen with reason and initials.</div>
         <button id="caseToggle" onclick="toggleCasePanel()">Open Case Actions</button>
@@ -518,6 +520,12 @@
     var selectedClient = null;
     var signaturePad = null;
     var contractSignatureDraft = '';
+
+    function formatCurrency(val) {
+      var num = parseFloat(val);
+      if (isNaN(num)) { return '$0.00'; }
+      return '$' + num.toFixed(2);
+    }
     var signatureTarget = '';
 
     // === In-page toast instead of browser popups ===
@@ -568,6 +576,9 @@
       loadClients();
       updateNewContractStatus();
 
+      // Panels locked until a client is selected or created
+      setPanelAvailability(false);
+
       // Attach live-credit listener after DOM is ready
       var fp = document.getElementById('finalPrice');
       if (fp) {
@@ -588,6 +599,29 @@
       if (caseDetails) caseDetails.style.display = 'none';
       var ct = document.getElementById('caseToggle');
       if (ct) ct.textContent = 'Open Case Actions';
+      setPanelAvailability(false);
+    }
+
+    function setPanelAvailability(enabled) {
+      var quickCard = document.getElementById('quickProvisionCard');
+      var caseCard = document.getElementById('caseActionsCard');
+      [quickCard, caseCard].forEach(function(card) {
+        if (!card) return;
+        card.style.display = enabled ? 'block' : 'none';
+        var fields = card.querySelectorAll('input, select, textarea, button');
+        fields.forEach(function(el) {
+          el.disabled = !enabled;
+        });
+      });
+      // Keep the case panel collapsed each time it unlocks
+      var caseDetails = document.getElementById('caseDetails');
+      if (caseDetails) {
+        caseDetails.style.display = 'none';
+      }
+      var ct = document.getElementById('caseToggle');
+      if (ct) {
+        ct.textContent = 'Open Case Actions';
+      }
     }
 
     function initSignaturePad() {
@@ -812,9 +846,22 @@
       document.getElementById('clientDetailFields').style.display = 'block';
       document.getElementById('clientSummary').style.display = 'none';
 
-      document.getElementById('clientName').textContent = (client.firstName || '') + ' ' + (client.lastName || '');
-      document.getElementById('clientPhone').textContent = client.phone || '-';
-      document.getElementById('clientGuardians').textContent = client.guardians || '-';
+      setPanelAvailability(true);
+
+      document.getElementById('clientName').textContent = formatNA(client.firstName) + ' ' + formatNA(client.lastName);
+      document.getElementById('clientPhone').textContent = formatNA(client.phone);
+      document.getElementById('clientGuardians').textContent = formatNA(client.guardians);
+
+      var contractLimit = (typeof client.contractLimit === 'number') ? client.contractLimit : 30;
+      var contractSpend = (typeof client.totalSpent === 'number') ? client.totalSpent : 0;
+      var creditRemaining = (typeof client.creditBalance === 'number') ? client.creditBalance : (contractLimit - contractSpend);
+      document.getElementById('clientContractLimit').textContent = formatCurrency(contractLimit);
+      document.getElementById('clientSpend').textContent = formatCurrency(contractSpend);
+      document.getElementById('clientCredit').textContent = formatCurrency(creditRemaining);
+      var helper = document.getElementById('creditHelper');
+      if (helper) {
+        helper.textContent = 'Contract limit ' + formatCurrency(contractLimit) + ' · Spent ' + formatCurrency(contractSpend) + ' · Remaining ' + formatCurrency(creditRemaining);
+      }
 
       var statusEl = document.getElementById('clientStatus');
       var status = client.status || 'Active';
@@ -827,26 +874,28 @@
         statusEl.style.color = '#191724';
       }
 
-      document.getElementById('clientDue').textContent = client.dueMonth || '-';
-      document.getElementById('clientActivity').textContent = client.lastActivity || '-';
+      document.getElementById('clientDue').textContent = formatNA(client.dueMonth);
+      document.getElementById('clientActivity').textContent = formatNA(client.lastActivity);
 
-      var hasContract = !!client.signature;
+      var hasContract = !!client.signature && client.signature !== 'N/A';
       var contractEl = document.getElementById('clientContract');
-      contractEl.textContent = hasContract ? 'Contract On File' : 'Missing';
+      contractEl.textContent = hasContract ? 'Contract On File' : 'N/A';
       contractEl.style.color = hasContract
         ? getComputedStyle(document.documentElement).getPropertyValue('--ok')
         : getComputedStyle(document.documentElement).getPropertyValue('--warn');
 
-      // Credit: default to $30 if not provided
-      var credit = (typeof client.creditBalance === 'number') ? client.creditBalance : 30;
+      // Credit: use live remaining amount if available
+      var credit = (typeof creditRemaining === 'number') ? creditRemaining : 30;
       selectedClient.creditBalance = credit;
       var creditEl = document.getElementById('clientCredit');
-      creditEl.textContent = '$' + credit.toFixed(2);
-      if (credit < 0) {
-        creditEl.textContent += ' (Over Credit)';
-        creditEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--warn');
-      } else {
-        creditEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ok');
+      if (creditEl) {
+        creditEl.textContent = formatCurrency(credit);
+        if (credit < 0) {
+          creditEl.textContent += ' (Over Credit)';
+          creditEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--warn');
+        } else {
+          creditEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--ok');
+        }
       }
 
       if (hasContract) {
@@ -933,6 +982,7 @@
     }
 
     function toggleCasePanel() {
+      if (!selectedClient) { showMessage('Select a client first.', 'error'); return; }
       var panel = document.getElementById('caseDetails');
       var btn = document.getElementById('caseToggle');
       var isHidden = panel.style.display === 'none' || panel.style.display === '';
@@ -987,6 +1037,10 @@
       return el ? el.value.trim() : '';
     }
 
+    function formatNA(value) {
+      return value ? value : 'N/A';
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -1038,7 +1092,17 @@
 
       // Reset selectedClient for credit display
       selectedClient = null;
+      var helper = document.getElementById('creditHelper');
+      if (helper) { helper.textContent = 'Client contract credit applies. Enter quantities, clerk initials, and the final price to see remaining credit live.'; }
+      var limitEl = document.getElementById('clientContractLimit');
+      var spendEl = document.getElementById('clientSpend');
+      var creditEl = document.getElementById('clientCredit');
+      if (limitEl) limitEl.textContent = formatCurrency(30);
+      if (spendEl) spendEl.textContent = formatCurrency(0);
+      if (creditEl) creditEl.textContent = formatCurrency(30);
       updateLiveCredit();
+
+      setPanelAvailability(false);
 
       showMessage('Page reset.', 'success');
     }
