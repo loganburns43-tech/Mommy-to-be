@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mommy To Be Portal</title>
+  <style>
+    :root {
+      --bg: #191724;
+      --card: #1f1d2e;
+      --surface: #26233a;
+      --border: #403d52;
+      --text: #e0def4;
+      --muted: #6e6a86;
+      --accent: #eb6f92;
+      --secondary: #31748f;
+      --cta: #f6c177;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Verdana, sans-serif;
+      line-height: 1.5;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      text-align: center;
+      margin-top: 0;
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 0 auto;
+      max-width: 900px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .row .half {
+      flex: 1 1 240px;
+    }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    button {
+      border: none;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      flex: 1 1 200px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    button.save {
+      background: var(--accent);
+      color: #191724;
+      font-weight: 700;
+    }
+
+    button.secondary {
+      background: var(--secondary);
+      color: var(--text);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .signature-wrapper {
+      margin-top: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--surface);
+    }
+
+    canvas {
+      width: 100%;
+      height: 200px;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    .history-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      z-index: 999;
+    }
+
+    .history-content {
+      background: var(--card);
+      max-width: 800px;
+      width: 100%;
+      max-height: 80vh;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .history-item {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mommy To Be</h1>
+  <p class="subtitle">Capture provisions, spending, and signatures for every mom.</p>
+  <div class="card">
+    <div class="row">
+      <div class="half">
+        <label for="momFirstName">Mom First Name</label>
+        <input type="text" id="momFirstName" placeholder="First Name" required>
+      </div>
+      <div class="half">
+        <label for="momLastName">Mom Last Name</label>
+        <input type="text" id="momLastName" placeholder="Last Name" required>
+      </div>
+    </div>
+    <div class="row">
+      <div class="half">
+        <label for="guardians">Guardians</label>
+        <input type="text" id="guardians" placeholder="Mom/Dad/Guardian" required>
+      </div>
+      <div class="half">
+        <label for="dueDate">Due Date</label>
+        <input type="date" id="dueDate">
+      </div>
+    </div>
+    <div class="row">
+      <div class="half">
+        <label for="date">Date</label>
+        <input type="date" id="date">
+      </div>
+      <div class="half">
+        <label for="babyStatus">Baby Status</label>
+        <select id="babyStatus">
+          <option value="Active">Active</option>
+          <option value="Born">Born</option>
+          <option value="Miscarriage">Miscarriage</option>
+        </select>
+      </div>
+    </div>
+    <label for="itemsGiven">Items Given (required)</label>
+    <textarea id="itemsGiven" placeholder="List diapers, wipes, formula, clothing, etc." required></textarea>
+
+    <div class="row">
+      <div class="half">
+        <label for="spent">Spent Amount</label>
+        <input type="number" step="0.01" min="0" id="spent" placeholder="0.00">
+      </div>
+      <div class="half">
+        <label for="clerkInitials">Clerk Initials (required)</label>
+        <input type="text" id="clerkInitials" placeholder="ABC" required>
+      </div>
+    </div>
+
+    <div class="signature-wrapper">
+      <label>Signature (required)</label>
+      <canvas id="signaturePad"></canvas>
+      <div class="actions" style="margin-top:8px;">
+        <button type="button" class="secondary" onclick="clearSignature()">Clear Signature</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="secondary" onclick="loadHistory()" id="historyBtn">Load History</button>
+      <button type="button" class="save" onclick="saveEntry()" id="saveBtn">Save Entry</button>
+    </div>
+  </div>
+
+  <div class="history-modal" id="historyModal">
+    <div class="history-content">
+      <div style="display:flex; justify-content: space-between; align-items:center; gap:8px;">
+        <h3 style="margin:0; color: var(--cta);">Full History</h3>
+        <button type="button" class="secondary" style="flex:0 0 auto;" onclick="closeHistory()">Close</button>
+      </div>
+      <div class="muted" id="historySpend" style="margin-top:6px;">Total Spent: $0.00</div>
+      <div id="historyBody" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <script>
+    var canvas = document.getElementById('signaturePad');
+    var ctx = canvas.getContext('2d');
+    var drawing = false;
+    var signatureCaptured = false;
+
+    function resizeCanvas() {
+      var ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      ctx.scale(ratio, ratio);
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+      clearSignature();
+    }
+
+    function startDrawing(event) {
+      drawing = true;
+      signatureCaptured = true;
+      ctx.beginPath();
+      ctx.moveTo(getX(event), getY(event));
+    }
+
+    function draw(event) {
+      if (!drawing) {
+        return;
+      }
+      ctx.lineTo(getX(event), getY(event));
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      drawing = false;
+    }
+
+    function getX(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0].clientX - canvas.getBoundingClientRect().left;
+      }
+      return event.clientX - canvas.getBoundingClientRect().left;
+    }
+
+    function getY(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0].clientY - canvas.getBoundingClientRect().top;
+      }
+      return event.clientY - canvas.getBoundingClientRect().top;
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      signatureCaptured = false;
+    }
+
+    function saveEntry() {
+      var saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      var payload = {
+        momFirstName: document.getElementById('momFirstName').value,
+        momLastName: document.getElementById('momLastName').value,
+        guardians: document.getElementById('guardians').value,
+        dueDate: document.getElementById('dueDate').value,
+        date: document.getElementById('date').value,
+        babyStatus: document.getElementById('babyStatus').value,
+        itemsGiven: document.getElementById('itemsGiven').value,
+        spent: document.getElementById('spent').value,
+        clerkInitials: document.getElementById('clerkInitials').value,
+        signature: signatureCaptured ? canvas.toDataURL('image/png') : ''
+      };
+
+      if (!payload.itemsGiven) {
+        alert('Items Given is required.');
+        saveBtn.disabled = false;
+        return;
+      }
+      if (!payload.clerkInitials) {
+        alert('Clerk initials are required.');
+        saveBtn.disabled = false;
+        return;
+      }
+      if (!payload.momFirstName || !payload.momLastName) {
+        alert('Mom first and last name are required.');
+        saveBtn.disabled = false;
+        return;
+      }
+      if (!payload.guardians) {
+        alert('Guardians are required.');
+        saveBtn.disabled = false;
+        return;
+      }
+      if (!signatureCaptured) {
+        alert('Signature is required.');
+        saveBtn.disabled = false;
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          alert(response && response.message ? response.message : 'Saved.');
+          saveBtn.disabled = false;
+        })
+        .withFailureHandler(function(err) {
+          alert(err.message || err);
+          saveBtn.disabled = false;
+        })
+        .mtb_saveEntry(payload);
+    }
+
+    function loadHistory() {
+      var fullName = (document.getElementById('momFirstName').value || '').trim() + ' ' + (document.getElementById('momLastName').value || '').trim();
+      if (!fullName.trim()) {
+        alert('Enter a mom name first.');
+        return;
+      }
+      var historyBtn = document.getElementById('historyBtn');
+      historyBtn.disabled = true;
+      google.script.run
+        .withSuccessHandler(function(rows) {
+          renderHistory(rows);
+          updateSpend(fullName);
+          historyBtn.disabled = false;
+        })
+        .withFailureHandler(function(err) {
+          alert(err.message || err);
+          historyBtn.disabled = false;
+        })
+        .mtb_getHistory(fullName);
+    }
+
+    function updateSpend(fullName) {
+      var label = document.getElementById('historySpend');
+      if (!fullName || !fullName.trim()) {
+        if (label) { label.textContent = 'Total Spent: N/A'; }
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function(res) {
+          var total = res && typeof res.totalSpent === 'number' ? res.totalSpent : 0;
+          if (label) { label.textContent = 'Total Spent: $' + total.toFixed(2); }
+        })
+        .withFailureHandler(function() {
+          if (label) { label.textContent = 'Total Spent: N/A'; }
+        })
+        .mtb_getContractSpend(fullName);
+    }
+
+    function renderHistory(rows) {
+      var modal = document.getElementById('historyModal');
+      var body = document.getElementById('historyBody');
+      body.innerHTML = '';
+      if (!rows || !rows.length) {
+        body.innerHTML = '<p class="muted">No history yet.</p>';
+      } else {
+        for (var i = 0; i < rows.length; i++) {
+          var entry = rows[i];
+          var wrapper = document.createElement('div');
+          wrapper.className = 'history-item';
+          var when = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '';
+          wrapper.innerHTML = '<div><strong>' + (entry.itemsGiven || '') + '</strong></div>' +
+            '<div class="muted">' + when + ' · Status: ' + (entry.babyStatus || '') + ' · Spent: ' + (entry.spent || 0) + '</div>' +
+            '<div class="muted">Guardians: ' + (entry.guardians || '') + ' | Clerk: ' + (entry.clerkInitials || '') + '</div>';
+          body.appendChild(wrapper);
+        }
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeHistory() {
+      document.getElementById('historyModal').style.display = 'none';
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      startDrawing(e);
+    }, { passive: false });
+    canvas.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      draw(e);
+    }, { passive: false });
+    canvas.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      stopDrawing();
+    }, { passive: false });
+
+    window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('DOMContentLoaded', function() {
+      var today = new Date().toISOString().split('T')[0];
+      document.getElementById('date').value = today;
+      resizeCanvas();
+    });
+  </script>
+</body>
+</html>
